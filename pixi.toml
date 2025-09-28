@@ -1,0 +1,72 @@
+[project]
+name = "claude-code-sdk-langchain"
+description = "Claude Code SDK for LangChain integration"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+[dependencies]
+python = "3.11.*"
+# Core LangChain stack
+langchain = "*"
+langchain-core = "*"
+langchain-community = "*"
+langgraph = "*"
+# HTTP client for API calls
+httpx = "*"
+# Async support
+aiofiles = "*"
+# JSON handling
+pydantic = ">=2.0"
+# Environment variables
+python-dotenv = "*"
+# Development essentials
+pytest = "*"
+pytest-asyncio = "*"
+pytest-mock = "*"
+black = "*"
+ruff = "*"
+mypy = "*"
+# Documentation
+mkdocs = "*"
+mkdocs-material = "*"
+
+[tasks]
+# Core development tasks
+test = "pytest specs/ -v"
+test-watch = "pytest specs/ -v --tb=short -f"
+lint = "ruff check src/ specs/"
+format = "black src/ specs/ scripts/"
+format-check = "black --check src/ specs/ scripts/"
+typecheck = "mypy src/"
+check = { depends_on = ["format-check", "lint", "typecheck"] }
+
+# Documentation tasks
+docs-serve = "mkdocs serve"
+docs-build = "mkdocs build"
+
+# Utility tasks
+clean = "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && find . -name '*.pyc' -delete 2>/dev/null || true"
+install-dev = "pip install -e ."
+
+# Demo and examples
+demo = "python scripts/demo.py"
+examples = "python scripts/run_examples.py"
+
+[activation]
+scripts = [
+    "export PYTHONPATH=$PWD/src:${PYTHONPATH:-}",
+    "export CLAUDE_SDK_ENV=development"
+]
+
+[feature.dev.dependencies]
+# Additional dev-only dependencies can go here
+jupyterlab = "*"
+ipython = "*"
+
+[feature.docs.dependencies]
+# Documentation-specific dependencies
+mkdocs-jupyter = "*"
+pymdown-extensions = "*"
+
+[pypi-dependencies]
+claude-code-sdk = ">=0.0.23, <0.0.24"
