@@ -146,7 +146,7 @@ class ClaudeCodeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         """
-        Génération synchrone utilisant asyncio.run avec gestion d'erreurs.
+        Génération synchrone utilisant asyncio avec gestion d'erreurs améliorée.
 
         Args:
             messages: Messages d'entrée
@@ -157,19 +157,21 @@ class ClaudeCodeChatModel(BaseChatModel):
             ChatResult avec la réponse générée
         """
         try:
-            # Utiliser asyncio.run pour appeler la version async
+            # Vérifier si une boucle d'événements existe déjà
+            loop = asyncio.get_running_loop()
+            # Si on est dans une boucle, utiliser run_in_executor
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    asyncio.run,
+                    self._agenerate(messages, stop, None, **kwargs)
+                )
+                return future.result()
+        except RuntimeError:
+            # Pas de boucle active, on peut utiliser asyncio.run directement
             return asyncio.run(
                 self._agenerate(messages, stop, None, **kwargs)
             )
-        except RuntimeError as e:
-            # Si une boucle d'événements existe déjà, utiliser une approche différente
-            if "asyncio.run() cannot be called from a running event loop" in str(e):
-                loop = asyncio.get_event_loop()
-                future = asyncio.ensure_future(
-                    self._agenerate(messages, stop, None, **kwargs)
-                )
-                return loop.run_until_complete(future)
-            raise
 
     async def _agenerate(
         self,
@@ -267,44 +269,55 @@ class ClaudeCodeChatModel(BaseChatModel):
         """
         # Utiliser une approche thread-safe pour le streaming sync
         try:
-            # Créer une nouvelle boucle d'événements dans un thread
+            # Créer une nouvelle boucle d'événements dans un thread avec synchronisation
             import concurrent.futures
             import threading
+            import queue
 
-            results = []
-            exception = None
+            chunk_queue = queue.Queue()
+            exception_holder = {'exception': None}
+            done_event = threading.Event()
 
             def run_async_generator():
-                nonlocal results, exception
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
 
-                    async def collect_chunks():
-                        chunks = []
-                        async for chunk in self._astream(messages, stop, None, **kwargs):
-                            chunks.append(chunk)
-                        return chunks
+                    async def stream_chunks():
+                        try:
+                            async for chunk in self._astream(messages, stop, None, **kwargs):
+                                chunk_queue.put(chunk)
+                        except Exception as e:
+                            exception_holder['exception'] = e
+                        finally:
+                            done_event.set()
 
-                    results = loop.run_until_complete(collect_chunks())
+                    loop.run_until_complete(stream_chunks())
                 except Exception as e:
-                    exception = e
+                    exception_holder['exception'] = e
+                    done_event.set()
                 finally:
                     loop.close()
 
             # Exécuter dans un thread séparé
-            thread = threading.Thread(target=run_async_generator)
+            thread = threading.Thread(target=run_async_generator, daemon=True)
             thread.start()
-            thread.join()
 
-            if exception:
-                raise exception
+            # Yielder les chunks en temps réel
+            while not done_event.is_set() or not chunk_queue.empty():
+                try:
+                    chunk = chunk_queue.get(timeout=0.1)
+                    if run_manager and chunk.message.content:
+                        run_manager.on_llm_new_token(chunk.message.content)
+                    yield chunk
+                except queue.Empty:
+                    continue
 
-            # Yielder les résultats
-            for chunk in results:
-                if run_manager:
-                    run_manager.on_llm_new_token(chunk.message.content)
-                yield chunk
+            # Vérifier les exceptions après traitement
+            if exception_holder['exception']:
+                raise exception_holder['exception']
+
+            thread.join(timeout=1.0)
 
         except Exception as e:
             logger.error(f"Error in streaming: {e}")

@@ -26,27 +26,50 @@ class MessageConverter:
 
         Returns:
             Prompt formaté pour Claude Code SDK
+
+        Raises:
+            ValueError: Si la liste de messages est vide ou contient des messages invalides
         """
+        if not messages:
+            raise ValueError("La liste de messages ne peut pas être vide")
+
         prompt_parts = []
 
-        for message in messages:
+        for i, message in enumerate(messages):
+            # Validation du contenu
+            if message.content is None:
+                logger.warning(f"Message {i} a un contenu None, ignoré")
+                continue
+
+            # Nettoyer le contenu pour éviter les injections
+            content = str(message.content).strip()
+            if not content:
+                logger.warning(f"Message {i} a un contenu vide, ignoré")
+                continue
+
+            # Échapper les caractères spéciaux qui pourraient casser le format
+            content = content.replace("\\", "\\\\").replace('"', '\\"')
+
             if isinstance(message, SystemMessage):
                 # Les messages système deviennent du contexte
-                prompt_parts.append(f"System: {message.content}")
+                prompt_parts.append(f"System: {content}")
 
             elif isinstance(message, HumanMessage):
-                prompt_parts.append(f"Human: {message.content}")
+                prompt_parts.append(f"Human: {content}")
 
             elif isinstance(message, AIMessage):
-                prompt_parts.append(f"Assistant: {message.content}")
+                prompt_parts.append(f"Assistant: {content}")
 
             elif isinstance(message, (ToolMessage, FunctionMessage)):
                 # Les messages d'outils sont formatés spécialement
-                prompt_parts.append(f"Tool Result: {message.content}")
+                prompt_parts.append(f"Tool Result: {content}")
 
             else:
                 # Fallback pour tout autre type
-                prompt_parts.append(str(message.content))
+                prompt_parts.append(content)
+
+        if not prompt_parts:
+            raise ValueError("Aucun message valide à convertir")
 
         # Claude Code SDK attend un prompt simple ou structuré
         return "\n\n".join(prompt_parts)
@@ -118,7 +141,7 @@ class MessageConverter:
     @staticmethod
     def extract_usage_metadata(claude_message) -> Dict[str, Any]:
         """
-        Extrait les métadonnées d'usage d'un message Claude Code.
+        Extrait les métadonnées d'usage d'un message Claude Code avec gestion d'erreurs.
 
         Args:
             claude_message: Message du SDK Claude Code
@@ -130,12 +153,22 @@ class MessageConverter:
 
         metadata = {}
 
-        if isinstance(claude_message, ResultMessage):
-            if claude_message.usage:
-                metadata["usage"] = claude_message.usage
-            if claude_message.total_cost_usd is not None:
-                metadata["cost_usd"] = claude_message.total_cost_usd
-            metadata["duration_ms"] = claude_message.duration_ms
-            metadata["session_id"] = claude_message.session_id
+        try:
+            if isinstance(claude_message, ResultMessage):
+                # Extraction sûre avec validation
+                if hasattr(claude_message, 'usage') and claude_message.usage:
+                    metadata["usage"] = claude_message.usage
+
+                if hasattr(claude_message, 'total_cost_usd') and claude_message.total_cost_usd is not None:
+                    metadata["cost_usd"] = float(claude_message.total_cost_usd)
+
+                if hasattr(claude_message, 'duration_ms') and claude_message.duration_ms is not None:
+                    metadata["duration_ms"] = int(claude_message.duration_ms)
+
+                if hasattr(claude_message, 'session_id') and claude_message.session_id:
+                    metadata["session_id"] = str(claude_message.session_id)
+
+        except (AttributeError, TypeError, ValueError) as e:
+            logger.warning(f"Erreur lors de l'extraction des métadonnées: {e}")
 
         return metadata

@@ -24,11 +24,16 @@ def test_basic_chat_invocation():
     try:
         response = model.invoke(messages)
 
-        # Valider la réponse
-        assert response is not None
-        assert isinstance(response, AIMessage)
-        assert len(response.content) > 0
-        assert response.content != ""
+        # Valider la réponse avec assertions plus strictes
+        assert response is not None, "La réponse ne devrait pas être None"
+        assert isinstance(response, AIMessage), f"Type attendu: AIMessage, reçu: {type(response)}"
+        assert len(response.content) > 0, "Le contenu de la réponse est vide"
+        assert response.content != "", "Le contenu est une chaîne vide"
+        assert not response.content.isspace(), "Le contenu ne contient que des espaces"
+
+        # Vérifier que la réponse a du sens (contient au moins quelques mots)
+        words = response.content.split()
+        assert len(words) >= 3, f"Réponse trop courte: seulement {len(words)} mots"
 
         print(f"✅ Test basique réussi")
         print(f"   Réponse: {response.content[:100]}...")
