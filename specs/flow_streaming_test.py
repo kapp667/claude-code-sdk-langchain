@@ -37,8 +37,11 @@ def test_flow_sync_streaming_basic():
     # User iterates over stream
     for chunk in model.stream(messages):
         chunks_received.append(chunk)
+        # Le chunk peut être un AIMessageChunk ou ChatGenerationChunk
         if hasattr(chunk, 'content'):
             full_content += chunk.content
+        elif hasattr(chunk, 'message') and hasattr(chunk.message, 'content'):
+            full_content += chunk.message.content
 
     # Validate streaming occurred
     assert len(chunks_received) > 0, "No chunks received from stream"
@@ -49,9 +52,14 @@ def test_flow_sync_streaming_basic():
     assert len(chunks_received) >= 1, "Expected incremental streaming"
 
     # Verify chunk types
+    from langchain_core.messages import AIMessageChunk
+    from langchain_core.outputs import ChatGenerationChunk
     for chunk in chunks_received:
-        assert hasattr(chunk, 'message'), "Chunk missing message attribute"
-        assert isinstance(chunk.message, AIMessageChunk), "Invalid chunk type"
+        # LangChain peut retourner soit ChatGenerationChunk soit AIMessageChunk directement
+        assert isinstance(chunk, (ChatGenerationChunk, AIMessageChunk)), f"Invalid chunk type: {type(chunk)}"
+        if isinstance(chunk, ChatGenerationChunk):
+            assert hasattr(chunk, 'message'), "Chunk missing message attribute"
+            assert isinstance(chunk.message, AIMessageChunk), "Invalid message type in chunk"
 
     print(f"✅ Sync streaming test passed: {len(chunks_received)} chunks received")
 

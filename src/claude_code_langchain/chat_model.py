@@ -307,8 +307,10 @@ class ClaudeCodeChatModel(BaseChatModel):
             while not done_event.is_set() or not chunk_queue.empty():
                 try:
                     chunk = chunk_queue.get(timeout=0.1)
-                    if run_manager and chunk.message.content:
+                    # ChatGenerationChunk contient un AIMessageChunk dans .message
+                    if run_manager and hasattr(chunk, 'message') and chunk.message.content:
                         run_manager.on_llm_new_token(chunk.message.content)
+                    # On retourne le ChatGenerationChunk complet pour LangChain
                     yield chunk
                 except queue.Empty:
                     continue
