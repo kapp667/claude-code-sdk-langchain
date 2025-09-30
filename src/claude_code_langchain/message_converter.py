@@ -2,6 +2,7 @@
 Convertisseur de messages entre LangChain et Claude Code SDK
 """
 
+import logging
 from typing import List, Union, Dict, Any
 from langchain_core.messages import (
     BaseMessage,
@@ -11,6 +12,8 @@ from langchain_core.messages import (
     ToolMessage,
     FunctionMessage
 )
+
+logger = logging.getLogger(__name__)
 
 
 class MessageConverter:
@@ -41,14 +44,24 @@ class MessageConverter:
                 logger.warning(f"Message {i} a un contenu None, ignoré")
                 continue
 
-            # Nettoyer le contenu pour éviter les injections
-            content = str(message.content).strip()
+            # Gérer les différents types de contenu
+            if isinstance(message.content, str):
+                content = message.content.strip()
+            elif isinstance(message.content, list):
+                # Contenu multimodal (texte + images)
+                content_parts = []
+                for part in message.content:
+                    if isinstance(part, dict) and "text" in part:
+                        content_parts.append(part["text"])
+                    elif isinstance(part, str):
+                        content_parts.append(part)
+                content = " ".join(content_parts).strip()
+            else:
+                content = str(message.content).strip()
+
             if not content:
                 logger.warning(f"Message {i} a un contenu vide, ignoré")
                 continue
-
-            # Échapper les caractères spéciaux qui pourraient casser le format
-            content = content.replace("\\", "\\\\").replace('"', '\\"')
 
             if isinstance(message, SystemMessage):
                 # Les messages système deviennent du contexte

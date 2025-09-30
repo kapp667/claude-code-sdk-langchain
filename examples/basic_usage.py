@@ -21,7 +21,7 @@ def example_simple_invocation():
 
     # Créer le modèle (utilise votre abonnement Claude Code)
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.7,
         max_tokens=500
     )
@@ -41,7 +41,7 @@ def example_with_system_prompt():
 
     # Modèle avec configuration système
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         system_prompt="Tu es un expert Python qui répond de manière très concise.",
         temperature=0.3,
         max_tokens=200
@@ -63,7 +63,7 @@ def example_streaming():
     print("-" * 40)
 
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.8
     )
 
@@ -82,7 +82,7 @@ def example_langchain_chain():
 
     # Créer les composants de la chaîne
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.5
     )
 
@@ -109,7 +109,7 @@ async def example_async_operations():
     print("-" * 40)
 
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.6
     )
 
@@ -135,7 +135,7 @@ def example_batch_processing():
     print("-" * 40)
 
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.4,
         max_tokens=100
     )
@@ -161,7 +161,7 @@ def example_complex_agent_chain():
     from langchain_core.runnables import RunnablePassthrough
 
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
+        model="claude-sonnet-4-20250514",
         temperature=0.5
     )
 
@@ -204,31 +204,36 @@ def example_complex_agent_chain():
 
 
 def example_continuous_session():
-    """Exemple 8: Session continue avec mémoire (si activé)"""
-    print("\n💭 Exemple 8: Session Continue")
+    """Exemple 8: Conversation multi-tour (gestion manuelle du contexte)"""
+    print("\n💭 Exemple 8: Conversation Multi-Tour")
     print("-" * 40)
 
-    # Modèle avec session continue
+    # ClaudeCodeChatModel est STATELESS par design (compatible LangChain)
+    # Pour maintenir le contexte, passer explicitement l'historique
     model = ClaudeCodeChatModel(
-        model="claude-3-opus-20240229",
-        temperature=0.6,
-        use_continuous_session=True  # Active la mémoire de session
+        model="claude-sonnet-4-20250514",
+        temperature=0.6
     )
 
-    print("Note: La session continue nécessite ClaudeSDKClient")
-    print("Cette fonctionnalité maintient le contexte entre les appels")
+    print("Note: Le modèle est stateless (recommandé pour LangChain)")
+    print("Le contexte est géré en passant l'historique explicitement")
 
-    # Première question
-    response1 = model.invoke([
-        HumanMessage(content="Je m'appelle Alice")
-    ])
+    # Construire l'historique manuellement
+    conversation = []
+
+    # Première interaction
+    conversation.append(HumanMessage(content="Je m'appelle Alice"))
+    response1 = model.invoke(conversation)
     print(f"R1: {response1.content}")
 
-    # Deuxième question (devrait se souvenir du nom)
-    response2 = model.invoke([
-        HumanMessage(content="Quel est mon nom?")
-    ])
+    # Ajouter la réponse à l'historique
+    conversation.append(response1)
+
+    # Deuxième interaction avec contexte
+    conversation.append(HumanMessage(content="Quel est mon nom?"))
+    response2 = model.invoke(conversation)
     print(f"R2: {response2.content}")
+    print("\nContexte maintenu via historique explicite ✓")
 
 
 def main():

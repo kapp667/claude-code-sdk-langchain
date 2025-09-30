@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 try:
     from claude_code_sdk import (
         query,
-        ClaudeSDKClient,
         ClaudeCodeOptions,
         AssistantMessage,
         TextBlock,
@@ -102,12 +101,6 @@ class ClaudeCodeChatModel(BaseChatModel):
     cwd: Optional[str] = Field(default=None)
     """Répertoire de travail pour Claude Code"""
 
-    use_continuous_session: bool = Field(default=False)
-    """Si True, maintient une session continue avec mémoire"""
-
-    _client: Optional[ClaudeSDKClient] = None
-    """Client SDK pour les sessions continues"""
-
     _converter: MessageConverter = MessageConverter()
     """Convertisseur de messages"""
 
@@ -123,20 +116,31 @@ class ClaudeCodeChatModel(BaseChatModel):
                 "npm install -g @anthropic-ai/claude-code"
             )
 
-        # Initialiser le client si mode session continue
-        if self.use_continuous_session:
-            self._client = ClaudeSDKClient(options=self._get_claude_options())
-
     def _get_claude_options(self) -> ClaudeCodeOptions:
         """Construit les options pour Claude Code SDK"""
-        return ClaudeCodeOptions(
-            model=self.model_name,
-            system_prompt=self.system_prompt,
-            permission_mode=self.permission_mode,
-            allowed_tools=self.allowed_tools,
-            cwd=self.cwd,
-            max_turns=1,  # Pour comportement chat simple
-        )
+        # Note: ClaudeCodeOptions ne supporte pas temperature et max_tokens
+        # Ces paramètres sont gérés au niveau du modèle Claude lui-même
+        # via extra_args si nécessaire
+        options_dict = {
+            "model": self.model_name,
+            "system_prompt": self.system_prompt,
+            "permission_mode": self.permission_mode,
+            "allowed_tools": self.allowed_tools,
+            "cwd": self.cwd,
+            "max_turns": 1,  # Pour comportement chat simple
+        }
+
+        # Ajouter temperature et max_tokens via extra_args si spécifiés
+        extra_args = {}
+        if self.temperature is not None:
+            extra_args["temperature"] = str(self.temperature)
+        if self.max_tokens is not None:
+            extra_args["max-tokens"] = str(self.max_tokens)
+
+        if extra_args:
+            options_dict["extra_args"] = extra_args
+
+        return ClaudeCodeOptions(**options_dict)
 
     def _generate(
         self,
@@ -150,12 +154,23 @@ class ClaudeCodeChatModel(BaseChatModel):
 
         Args:
             messages: Messages d'entrée
-            stop: Séquences d'arrêt
+            stop: Séquences d'arrêt (non supporté par Claude Code SDK)
             run_manager: Gestionnaire de callbacks
 
         Returns:
             ChatResult avec la réponse générée
         """
+        # Avertir si stop sequences ou kwargs non supportés sont passés
+        if stop:
+            logger.warning(
+                f"Stop sequences {stop} are not supported by Claude Code SDK and will be ignored. "
+                "This may cause different behavior when migrating to production APIs."
+            )
+        if kwargs:
+            logger.warning(
+                f"Additional parameters {list(kwargs.keys())} are not supported and will be ignored."
+            )
+
         try:
             # Vérifier si une boucle d'événements existe déjà
             loop = asyncio.get_running_loop()
@@ -185,12 +200,23 @@ class ClaudeCodeChatModel(BaseChatModel):
 
         Args:
             messages: Messages d'entrée
-            stop: Séquences d'arrêt
+            stop: Séquences d'arrêt (non supporté par Claude Code SDK)
             run_manager: Gestionnaire de callbacks asynchrone
 
         Returns:
             ChatResult avec la réponse générée
         """
+        # Avertir si stop sequences ou kwargs non supportés sont passés
+        if stop:
+            logger.warning(
+                f"Stop sequences {stop} are not supported by Claude Code SDK and will be ignored. "
+                "This may cause different behavior when migrating to production APIs."
+            )
+        if kwargs:
+            logger.warning(
+                f"Additional parameters {list(kwargs.keys())} are not supported and will be ignored."
+            )
+
         try:
             # Convertir les messages LangChain en prompt pour Claude
             prompt = self._converter.langchain_to_claude_prompt(messages)
@@ -216,14 +242,15 @@ class ClaudeCodeChatModel(BaseChatModel):
                     if message.is_error:
                         raise RuntimeError(f"Claude Code error: {message.result}")
 
-            # Ajouter le thinking au metadata si présent
-            if thinking_content:
-                usage_metadata["thinking"] = thinking_content
-
             # Créer le message de réponse LangChain
+            # Mettre thinking dans additional_kwargs pour cohérence avec streaming
+            additional_kwargs = {"model": self.model_name}
+            if thinking_content:
+                additional_kwargs["thinking"] = thinking_content
+
             ai_message = AIMessage(
                 content=result_content,
-                additional_kwargs={"model": self.model_name},
+                additional_kwargs=additional_kwargs,
                 response_metadata=usage_metadata,
             )
 
@@ -299,8 +326,8 @@ class ClaudeCodeChatModel(BaseChatModel):
                 finally:
                     loop.close()
 
-            # Exécuter dans un thread séparé
-            thread = threading.Thread(target=run_async_generator, daemon=True)
+            # Exécuter dans un thread séparé (non-daemon pour cleanup propre)
+            thread = threading.Thread(target=run_async_generator, daemon=False)
             thread.start()
 
             # Yielder les chunks en temps réel
@@ -308,7 +335,8 @@ class ClaudeCodeChatModel(BaseChatModel):
                 try:
                     chunk = chunk_queue.get(timeout=0.1)
                     # ChatGenerationChunk contient un AIMessageChunk dans .message
-                    if run_manager and hasattr(chunk, 'message') and chunk.message.content:
+                    # Vérifier content is not None (pas juste truthiness)
+                    if run_manager and hasattr(chunk, 'message') and chunk.message.content is not None:
                         run_manager.on_llm_new_token(chunk.message.content)
                     # On retourne le ChatGenerationChunk complet pour LangChain
                     yield chunk
@@ -319,7 +347,8 @@ class ClaudeCodeChatModel(BaseChatModel):
             if exception_holder['exception']:
                 raise exception_holder['exception']
 
-            thread.join(timeout=1.0)
+            # Attendre que le thread se termine proprement (pas de timeout)
+            thread.join()
 
         except Exception as e:
             logger.error(f"Error in streaming: {e}")
@@ -349,7 +378,12 @@ class ClaudeCodeChatModel(BaseChatModel):
 
             # Stream la réponse
             async for message in query(prompt=prompt, options=self._get_claude_options()):
-                if isinstance(message, AssistantMessage):
+                if isinstance(message, ResultMessage):
+                    # Vérifier les erreurs
+                    if message.is_error:
+                        raise RuntimeError(f"Claude Code error: {message.result}")
+
+                elif isinstance(message, AssistantMessage):
                     for block in message.content:
                         if isinstance(block, TextBlock):
                             # Créer un chunk pour chaque bloc de texte
@@ -376,39 +410,6 @@ class ClaudeCodeChatModel(BaseChatModel):
             logger.error(f"Error in async streaming: {e}")
             raise
 
-    async def aconnect(self) -> None:
-        """
-        Connecte le client pour les sessions continues.
-        Utilisé uniquement si use_continuous_session=True.
-        """
-        if self.use_continuous_session and self._client:
-            try:
-                await self._client.connect()
-            except Exception as e:
-                logger.error(f"Failed to connect client: {e}")
-                raise
-
-    async def adisconnect(self) -> None:
-        """
-        Déconnecte le client pour les sessions continues.
-        """
-        if self.use_continuous_session and self._client:
-            try:
-                await self._client.disconnect()
-            except Exception as e:
-                logger.error(f"Failed to disconnect client: {e}")
-
-    async def __aenter__(self):
-        """Support du context manager async"""
-        if self.use_continuous_session:
-            await self.aconnect()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Sortie du context manager async"""
-        if self.use_continuous_session:
-            await self.adisconnect()
-
     @property
     def _llm_type(self) -> str:
         """Type de LLM pour identification"""
@@ -422,7 +423,6 @@ class ClaudeCodeChatModel(BaseChatModel):
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "permission_mode": self.permission_mode,
-            "use_continuous_session": self.use_continuous_session,
         }
 
     @property
