@@ -7,13 +7,15 @@ import asyncio
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
+from .test_helpers import get_test_model_name
+
 
 def test_basic_chat_invocation():
     """Test d'invocation basique du modèle"""
     from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer le modèle
-    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7, max_tokens=500)
+    # Créer le modèle - utilise CLAUDE_TEST_MODEL env var (haiku par défaut)
+    model = ClaudeCodeChatModel(model=get_test_model_name(), temperature=0.7, max_tokens=500)
 
     # Tester l'invocation synchrone
     messages = [HumanMessage(content="Bonjour, qui es-tu?")]

@@ -69,6 +69,8 @@ deploy-dry-run = "python scripts/deploy.py --dry-run"
 [activation.env]
 PYTHONPATH = "$PWD/src"
 CLAUDE_SDK_ENV = "development"
+# Model for tests - use haiku for speed, sonnet for quality
+CLAUDE_TEST_MODEL = "haiku"
 
 [pypi-dependencies]
 claude-code-sdk = ">=0.0.23, <0.0.24"
