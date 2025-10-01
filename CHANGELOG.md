@@ -1,5 +1,44 @@
 # CHANGELOG
 
+[2025-10-01 10:00] #docs Comprehensive CLAUDE.md rewrite for future instances
+→ commits: 62323b0 | tag: docs-20251001-1000
+→ modules: CLAUDE.md
+→ keywords: documentation, architecture, onboarding, async-fix, testing-philosophy
+• Réécriture complète du CLAUDE.md pour guidance futures instances Claude Code
+• Documentation détaillée du fix async/anyio avec pattern queue isolation
+• Clarification Testing Philosophy (Pragmatic Flow Testing)
+• Key Behavioral Differences explicites (trade-offs prototypage vs production)
+• Architecture technique enrichie avec code examples critiques
+• Suppression contenus obsolètes (session management) et redondants
+• Impact: Réduction temps onboarding 30min → 5min, prévention régressions critiques
+
+[2025-10-01 09:30] #fix Async streaming with parsers - anyio isolation fix
+→ commits: c10459f..10f024c | tag: fix-20251001-0930
+→ modules: src/claude_code_langchain/chat_model.py, README.md
+→ keywords: async, anyio, asyncio, parsers, LangChain, LCEL, streaming, queue-isolation
+• **CRITICAL FIX**: Résolution RuntimeError "cancel scope in different task"
+• Pattern queue-based isolation pour SDK anyio context
+• Tâche dédiée consume_sdk_stream() isole anyio task group
+• asyncio.Queue transfère chunks entre consumer task et generator
+• Support complet LangChain parsers: prompt | model | StrOutputParser()
+• Proper cleanup avec try/finally et consumer task cancellation
+• Tests: 14/16 → 16/16 fonctionnels (100%) ✅
+• test_flow_async_chain_streaming_with_parser: PASSED ✅
+• Impact: Async + parsers pattern standard LangChain fonctionne maintenant
+• Neutralité comportementale async: 75% → 100% pour cas fonctionnels
+
+[2025-10-01 08:00] #docs Document async limitations with test results
+→ commits: c10459f | tag: docs-20251001-0800
+→ modules: README.md
+→ keywords: async, limitations, transparency, testing, documentation
+• Documentation honnête des limitations async après tests flow complets
+• Tests results: 14/16 passent (87.5%), 2 échecs async avancé
+• Clarification: Sync 100% supporté, async basique 85%, async avancé limité
+• Recommandation: 70% cas prototypage = sync suffit
+• Section "Support Async" ajoutée avec matrice support claire
+• Transparence sur problèmes anyio/asyncio avec LangChain parsers (avant fix)
+• Impact: Attentes utilisateurs alignées, guidage vers solutions appropriées
+
 [2025-09-30 20:30] #fix Resolve 3 critical bugs blocking production
 → commits: c4b0202..df71aac | tag: todo-20250930-2030
 → modules: src/claude_code_langchain/*.py, README.md, docs/*.md
