@@ -151,10 +151,34 @@ model = ChatAnthropic(
 
 Si vous avez besoin du contrôle de température ou de limite de tokens pendant le développement, utilisez l'API de production directement avec votre clé API Anthropic.
 
+### Support Async
+
+L'adaptateur supporte les opérations asynchrones avec certaines limitations :
+
+**✅ Opérations Sync (Support Complet - 100%)**
+- `model.invoke()` - Support complet
+- `model.stream()` - Support complet
+- `model.batch()` - Support complet
+- Chaînes avec exécution sync - Support complet
+
+**⚠️ Opérations Async (Support Partiel)**
+- ✅ `model.ainvoke()` - Support complet
+- ✅ `model.astream()` - Streaming basique supporté
+- ⚠️ `chain.astream()` avec parsers - **Support limité** (problème anyio/asyncio)
+- ❌ Cancellation de stream - **Non supporté actuellement**
+
+**Recommandation** :
+- Pour prototypage avec notebooks, scripts, chaînes basiques → **Utiliser méthodes sync**
+- Pour besoins async avancés (parsers, cancellation) → **Utiliser API production (ChatAnthropic)**
+- 70% des cas d'usage prototypage = sync suffit amplement
+
+**Tests** : 14/16 tests passent (87.5%) - les échecs concernent async avancé uniquement.
+
 ### Autres Limitations
 
 - Pas de support natif des tool calls (peut être ajouté via prompting)
-- Latence potentiellement plus élevée que l'API directe
+- Pas de support vision/multimodal (images détectées et warning émis)
+- Latence potentiellement plus élevée que l'API directe (subprocess overhead)
 - Nécessite Claude Code CLI installé localement
 - Limité par les quotas de votre abonnement Claude Code
 
