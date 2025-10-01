@@ -1,5 +1,24 @@
 # CHANGELOG
 
+[2025-10-01 16:15] #release Package preparation for PyPI distribution
+→ commits: 9d6d188..HEAD | tag: release-20251001-1615
+→ modules: pyproject.toml, LICENSE, MANIFEST.in, .gitignore, README.md, PYPI_UPLOAD_GUIDE.md
+→ keywords: pypi, packaging, distribution, installation, public-release, badges
+• **PACKAGE READY**: Claude-code-langchain prêt pour publication PyPI
+• pyproject.toml: Metadata complète (keywords, classifiers, URLs GitHub)
+• LICENSE: MIT license créée pour distribution open source
+• MANIFEST.in: Contrôle distribution (docs incluses, CLAUDE.md exclu)
+• .gitignore: CLAUDE.md exclu de GitHub (conservé local uniquement)
+• README.md: Section installation enrichie (PyPI, Pixi, Poetry, GitHub)
+• README.md: Badges ajoutés (Python 3.11+, MIT, LangChain, Beta)
+• README.md: Import corrigé (claude_code_langchain au lieu de src.claude_code_langchain)
+• README.md: Documentation limitations exhaustive (95% neutralité comportementale)
+• PYPI_UPLOAD_GUIDE.md: Guide complet pour publication manuelle PyPI
+• Build: dist/claude_code_langchain-0.1.0.tar.gz + wheel générés et validés
+• Installation testée: pip install -e . ✅ + imports vérifiés ✅
+• Impact: Package installable via pip/pixi/poetry, prêt distribution publique
+• Next: Publication PyPI manuelle avec token API (voir PYPI_UPLOAD_GUIDE.md)
+
 [2025-10-01 10:00] #docs Comprehensive CLAUDE.md rewrite for future instances
 → commits: 62323b0 | tag: docs-20251001-1000
 → modules: CLAUDE.md

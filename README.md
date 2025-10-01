@@ -16,18 +16,46 @@ Cet adaptateur permet d'utiliser votre abonnement Claude Code existant comme bac
 
 ## 📦 Installation
 
-```bash
-# 1. Installer les dépendances
-pip install claude-code-sdk langchain langchain-core
+### Via PyPI (Recommandé)
 
-# 2. S'assurer que Claude Code CLI est installé
+```bash
+# Installation complète
+pip install claude-code-langchain
+
+# Ou avec dépendances de développement
+pip install claude-code-langchain[dev]
+```
+
+### Via Pixi
+
+```bash
+pixi add --pypi claude-code-langchain
+```
+
+### Via Poetry
+
+```bash
+poetry add claude-code-langchain
+```
+
+### Via GitHub (Version Développement)
+
+```bash
+pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git
+```
+
+### Prérequis
+
+Le **Claude Code CLI** doit être installé et configuré :
+
+```bash
 npm install -g @anthropic-ai/claude-code
 ```
 
 ## 🚀 Utilisation Rapide
 
 ```python
-from src.claude_code_langchain import ClaudeCodeChatModel
+from claude_code_langchain import ClaudeCodeChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
 # Créer le modèle (utilise votre abonnement Claude Code)
