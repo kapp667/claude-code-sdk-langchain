@@ -17,6 +17,7 @@ from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
     BaseMessage,
+    SystemMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
@@ -140,14 +141,36 @@ class ClaudeCodeChatModel(BaseChatModel):
                 f"For token limit control, use production API (ChatAnthropic)."
             )
 
-    def _get_claude_options(self) -> ClaudeCodeOptions:
-        """Construit les options pour Claude Code SDK"""
+    def _get_claude_options(self, messages: List[BaseMessage]) -> ClaudeCodeOptions:
+        """Construit les options pour Claude Code SDK
+
+        Args:
+            messages: Liste des messages pour déterminer si SystemMessage présent
+
+        Returns:
+            ClaudeCodeOptions configuré
+        """
         # Note: Temperature et max_tokens ne sont PAS supportés par le CLI Claude
         # Ces paramètres sont acceptés pour compatibilité API mais n'ont aucun effet
         # Warnings émis dans __init__ si valeurs non-défaut
+
+        # Gestion du conflit system_prompt:
+        # Si SystemMessage présent dans messages, ne pas passer system_prompt via options
+        # pour éviter d'avoir deux system prompts (un via options, un via le prompt texte)
+        has_system_message = any(isinstance(msg, SystemMessage) for msg in messages)
+
+        effective_system_prompt = None if has_system_message else self.system_prompt
+
+        if has_system_message and self.system_prompt:
+            logger.warning(
+                "Both constructor system_prompt and SystemMessage detected. "
+                "Using SystemMessage from messages (takes precedence). "
+                "Constructor system_prompt will be ignored."
+            )
+
         return ClaudeCodeOptions(
             model=self.model_name,
-            system_prompt=self.system_prompt,
+            system_prompt=effective_system_prompt,
             permission_mode=self.permission_mode,
             allowed_tools=self.allowed_tools,
             cwd=self.cwd,
@@ -239,7 +262,7 @@ class ClaudeCodeChatModel(BaseChatModel):
             usage_metadata = {}
 
             # Utiliser query() pour une interaction simple
-            async for message in query(prompt=prompt, options=self._get_claude_options()):
+            async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
                 if isinstance(message, AssistantMessage):
                     # Extraire le contenu textuel et thinking
                     for block in message.content:
@@ -389,7 +412,7 @@ class ClaudeCodeChatModel(BaseChatModel):
             prompt = self._converter.langchain_to_claude_prompt(messages)
 
             # Stream la réponse
-            async for message in query(prompt=prompt, options=self._get_claude_options()):
+            async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
                 if isinstance(message, ResultMessage):
                     # Vérifier les erreurs
                     if message.is_error:

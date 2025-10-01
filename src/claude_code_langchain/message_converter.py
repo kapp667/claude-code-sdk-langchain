@@ -50,11 +50,33 @@ class MessageConverter:
             elif isinstance(message.content, list):
                 # Contenu multimodal (texte + images)
                 content_parts = []
+                has_unsupported_content = False
+
                 for part in message.content:
-                    if isinstance(part, dict) and "text" in part:
-                        content_parts.append(part["text"])
+                    if isinstance(part, dict):
+                        # Vérifier le type de contenu
+                        part_type = part.get("type", "")
+
+                        if part_type in ["image_url", "image"] or "image_url" in part:
+                            # Image détectée - non supportée
+                            has_unsupported_content = True
+                            logger.warning(
+                                f"Image content detected in message {i} but NOT SUPPORTED by Claude Code SDK. "
+                                "Image will be ignored. This differs from production API behavior "
+                                "(ChatAnthropic supports vision). Consider using production API for vision tasks."
+                            )
+                        elif "text" in part:
+                            content_parts.append(part["text"])
+                        else:
+                            # Autre type de contenu non-text
+                            if part_type and part_type != "text":
+                                logger.warning(
+                                    f"Non-text content type '{part_type}' detected in message {i} and will be ignored. "
+                                    "Only text content is supported by Claude Code SDK."
+                                )
                     elif isinstance(part, str):
                         content_parts.append(part)
+
                 content = " ".join(content_parts).strip()
             else:
                 content = str(message.content).strip()
