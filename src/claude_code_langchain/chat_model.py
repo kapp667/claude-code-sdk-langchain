@@ -399,6 +399,9 @@ class ClaudeCodeChatModel(BaseChatModel):
         """
         Streaming asynchrone via Claude Code SDK avec gestion des ThinkingBlock.
 
+        Utilise une queue asyncio pour isoler le contexte anyio du SDK et éviter
+        les problèmes de cancel scope avec LangChain parsers.
+
         Args:
             messages: Messages d'entrée
             stop: Séquences d'arrêt
@@ -407,43 +410,86 @@ class ClaudeCodeChatModel(BaseChatModel):
         Yields:
             ChatGenerationChunk pour chaque partie de la réponse
         """
-        try:
-            # Convertir les messages en prompt
-            prompt = self._converter.langchain_to_claude_prompt(messages)
+        # Créer une queue pour transférer les chunks entre tasks
+        chunk_queue: asyncio.Queue = asyncio.Queue()
+        exception_holder = {"exception": None}
 
-            # Stream la réponse
-            async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
-                if isinstance(message, ResultMessage):
-                    # Vérifier les erreurs
-                    if message.is_error:
-                        raise RuntimeError(f"Claude Code error: {message.result}")
+        async def consume_sdk_stream():
+            """
+            Tâche dédiée qui consomme le stream SDK dans son propre contexte anyio.
+            Ceci isole le anyio task group du SDK des autres tasks LangChain.
+            """
+            try:
+                # Convertir les messages en prompt
+                prompt = self._converter.langchain_to_claude_prompt(messages)
 
-                elif isinstance(message, AssistantMessage):
-                    for block in message.content:
-                        if isinstance(block, TextBlock):
-                            # Créer un chunk pour chaque bloc de texte
-                            chunk = ChatGenerationChunk(
-                                message=AIMessageChunk(content=block.text)
-                            )
+                # Stream la réponse - cette boucle async s'exécute dans une task isolée
+                async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
+                    if isinstance(message, ResultMessage):
+                        # Vérifier les erreurs
+                        if message.is_error:
+                            raise RuntimeError(f"Claude Code error: {message.result}")
 
-                            if run_manager:
-                                await run_manager.on_llm_new_token(block.text)
-
-                            yield chunk
-
-                        elif isinstance(block, ThinkingBlock):
-                            # Optionnel: inclure le thinking dans les métadonnées
-                            chunk = ChatGenerationChunk(
-                                message=AIMessageChunk(
-                                    content="",
-                                    additional_kwargs={"thinking": block.thinking}
+                    elif isinstance(message, AssistantMessage):
+                        for block in message.content:
+                            if isinstance(block, TextBlock):
+                                # Créer un chunk pour chaque bloc de texte
+                                chunk = ChatGenerationChunk(
+                                    message=AIMessageChunk(content=block.text)
                                 )
-                            )
-                            yield chunk
+                                await chunk_queue.put(chunk)
+
+                            elif isinstance(block, ThinkingBlock):
+                                # Optionnel: inclure le thinking dans les métadonnées
+                                chunk = ChatGenerationChunk(
+                                    message=AIMessageChunk(
+                                        content="",
+                                        additional_kwargs={"thinking": block.thinking}
+                                    )
+                                )
+                                await chunk_queue.put(chunk)
+
+                # Signal de fin
+                await chunk_queue.put(None)
+
+            except Exception as e:
+                exception_holder["exception"] = e
+                await chunk_queue.put(None)
+
+        # Lancer la tâche de consommation du SDK dans un contexte isolé
+        consumer_task = asyncio.create_task(consume_sdk_stream())
+
+        try:
+            # Yielder les chunks depuis la queue
+            while True:
+                chunk = await chunk_queue.get()
+
+                # Vérifier exception de la tâche consumer
+                if exception_holder["exception"]:
+                    raise exception_holder["exception"]
+
+                # None = fin du stream
+                if chunk is None:
+                    break
+
+                # Callback manager
+                if run_manager and chunk.message.content:
+                    await run_manager.on_llm_new_token(chunk.message.content)
+
+                yield chunk
 
         except Exception as e:
             logger.error(f"Error in async streaming: {e}")
+            # Annuler la tâche consumer si erreur
+            consumer_task.cancel()
             raise
+
+        finally:
+            # S'assurer que la tâche consumer est terminée
+            try:
+                await consumer_task
+            except asyncio.CancelledError:
+                pass
 
     @property
     def _llm_type(self) -> str:

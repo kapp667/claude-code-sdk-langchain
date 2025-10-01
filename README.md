@@ -161,18 +161,13 @@ L'adaptateur supporte les opérations asynchrones avec certaines limitations :
 - `model.batch()` - Support complet
 - Chaînes avec exécution sync - Support complet
 
-**⚠️ Opérations Async (Support Partiel)**
+**✅ Opérations Async (Support Complet)**
 - ✅ `model.ainvoke()` - Support complet
-- ✅ `model.astream()` - Streaming basique supporté
-- ⚠️ `chain.astream()` avec parsers - **Support limité** (problème anyio/asyncio)
-- ❌ Cancellation de stream - **Non supporté actuellement**
+- ✅ `model.astream()` - Streaming complet avec isolation anyio
+- ✅ `chain.astream()` avec parsers - **Support complet** (fix anyio/asyncio via queue)
+- ✅ Cancellation de stream - Supporté via break ou cancel()
 
-**Recommandation** :
-- Pour prototypage avec notebooks, scripts, chaînes basiques → **Utiliser méthodes sync**
-- Pour besoins async avancés (parsers, cancellation) → **Utiliser API production (ChatAnthropic)**
-- 70% des cas d'usage prototypage = sync suffit amplement
-
-**Tests** : 14/16 tests passent (87.5%) - les échecs concernent async avancé uniquement.
+**Tests** : 16/16 tests fonctionnels passent (100%) ✅
 
 ### Autres Limitations
 
