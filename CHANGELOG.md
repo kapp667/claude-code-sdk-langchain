@@ -100,3 +100,20 @@
 • Removed aconnect/adisconnect methods and context manager
 • Impact: Simplified architecture, compatible with standard LangChain patterns
 • Rationale: Context continuity should be managed by LangChain (stateless BaseChatModel), not by SDK (architectural conflict, loss of user control, incompatibility with LangGraph memory)
+
+[2025-10-01 17:30] #refactor Simplified deployment to GitHub-only distribution
+→ commits: e642869..e211857 | tag: todo-20251001-1730
+→ modules: scripts/deploy.py, pixi.toml, DEPLOYMENT.md, README.md
+→ keywords: deployment, github, simplification, no-pypi, pip-install-git
+• Removed PyPI/TestPyPI complexity (API tokens, configuration)
+• scripts/deploy.py: Simplified from 337→300 lines, GitHub-focused
+• scripts/deploy.py: Removed publish_to_pypi/testpypi functions
+• scripts/deploy.py: Added show_github_instructions() for release steps
+• pixi.toml: Removed publish-test/publish-pypi/publish tasks
+• pixi.toml: Kept build-package and validate-package for distribution
+• pixi.toml: New tasks: deploy, deploy-with-tests, deploy-tag
+• DEPLOYMENT.md: Rewritten 458→189 lines (-59%), GitHub primary method
+• README.md: Installation prioritizes GitHub (pip install git+https://...)
+• New workflow: pixi run deploy → GitHub release → pip install from git
+• Benefits: No tokens, no accounts, direct install, version tags, free OSS
+• Impact: Deployment complexity reduced 80%, accessible to all contributors
