@@ -1,5 +1,5 @@
 """
-Test de flux : Intégration avec chaînes LangChain
+Flow test: Integration with LangChain chains
 """
 
 import asyncio
@@ -10,10 +10,10 @@ from langchain_core.messages import HumanMessage
 
 
 def test_simple_chain():
-    """Test d'une chaîne simple avec prompt et modèle"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of a simple chain with prompt and model"""
+    from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer les composants
+    # Create components
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.5,
@@ -21,11 +21,11 @@ def test_simple_chain():
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Tu es un assistant qui répond en {language}"),
+        ("system", "You are an assistant that responds about {language}"),
         ("human", "{question}")
     ])
 
-    # Créer la chaîne
+    # Create the chain
     chain = prompt | model
 
     try:
@@ -39,18 +39,18 @@ def test_simple_chain():
         assert response is not None
         assert len(response.content) > 0
 
-        print(f"✅ Test chaîne simple réussi")
-        print(f"   Réponse: {response.content[:100]}...")
+        print(f"✅ Simple chain test passed")
+        print(f"   Response: {response.content[:100]}...")
 
     except Exception as e:
-        pytest.fail(f"Échec test chaîne simple: {e}")
+        pytest.fail(f"Simple chain test failed: {e}")
 
 
 def test_chain_with_parser():
-    """Test d'une chaîne avec output parser"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of a chain with output parser"""
+    from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer les composants
+    # Create components
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.3,
@@ -58,161 +58,161 @@ def test_chain_with_parser():
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Réponds toujours de manière très concise"),
+        ("system", "Always respond very concisely"),
         ("human", "{input}")
     ])
 
     parser = StrOutputParser()
 
-    # Créer la chaîne complète
+    # Create complete chain
     chain = prompt | model | parser
 
     try:
-        # Invoquer la chaîne
+        # Invoke the chain
         response = chain.invoke({
-            "input": "Définis Python en 5 mots maximum"
+            "input": "Define Python in 5 words maximum"
         })
 
-        # Valider que c'est bien une string parsée
+        # Validate parsed string
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Test chaîne avec parser réussi")
-        print(f"   Réponse parsée: {response}")
+        print(f"✅ Chain with parser test passed")
+        print(f"   Parsed response: {response}")
 
     except Exception as e:
-        pytest.fail(f"Échec test avec parser: {e}")
+        pytest.fail(f"Parser test failed: {e}")
 
 
 @pytest.mark.asyncio
 async def test_async_chain():
-    """Test d'une chaîne asynchrone"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of an asynchronous chain"""
+    from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer les composants
+    # Create components
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.7
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Tu es un expert en {domain}"),
-        ("human", "Explique {concept}")
+        ("system", "You are an expert in {domain}"),
+        ("human", "Explain {concept}")
     ])
 
     chain = prompt | model | StrOutputParser()
 
     try:
-        # Invoquer de manière asynchrone
+        # Invoke asynchronously
         response = await chain.ainvoke({
-            "domain": "informatique",
-            "concept": "les algorithmes"
+            "domain": "computer science",
+            "concept": "algorithms"
         })
 
-        # Valider
+        # Validate
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Test chaîne async réussi")
-        print(f"   Réponse: {response[:100]}...")
+        print(f"✅ Async chain test passed")
+        print(f"   Response: {response[:100]}...")
 
     except Exception as e:
-        pytest.fail(f"Échec test async: {e}")
+        pytest.fail(f"Async test failed: {e}")
 
 
 def test_batch_processing():
-    """Test du traitement par batch"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of batch processing"""
+    from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer le modèle
+    # Create model
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.5,
         max_tokens=100
     )
 
-    # Créer plusieurs messages
+    # Create multiple messages
     batch_inputs = [
-        [HumanMessage(content="Qu'est-ce que 2+2?")],
-        [HumanMessage(content="Capitale de la France?")],
-        [HumanMessage(content="Couleur du ciel?")]
+        [HumanMessage(content="What is 2+2?")],
+        [HumanMessage(content="Capital of France?")],
+        [HumanMessage(content="Color of the sky?")]
     ]
 
     try:
-        # Traiter en batch
+        # Process batch
         responses = model.batch(batch_inputs)
 
-        # Valider
+        # Validate
         assert len(responses) == 3
         for response in responses:
             assert response is not None
             assert len(response.content) > 0
 
-        print(f"✅ Test batch réussi")
-        print(f"   {len(responses)} réponses reçues")
+        print(f"✅ Batch test passed")
+        print(f"   {len(responses)} responses received")
 
     except Exception as e:
-        pytest.fail(f"Échec test batch: {e}")
+        pytest.fail(f"Batch test failed: {e}")
 
 
 def test_streaming_chain():
-    """Test du streaming dans une chaîne"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of streaming in a chain"""
+    from claude_code_langchain import ClaudeCodeChatModel
 
-    # Créer les composants
+    # Create components
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.7
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("human", "Raconte une courte histoire sur {topic}")
+        ("human", "Tell a short story about {topic}")
     ])
 
     chain = prompt | model
 
     try:
-        # Stream la réponse
+        # Stream the response
         chunks_count = 0
-        for chunk in chain.stream({"topic": "un robot"}):
+        for chunk in chain.stream({"topic": "a robot"}):
             chunks_count += 1
             print(".", end="", flush=True)
 
-        print()  # Nouvelle ligne
+        print()  # New line
         assert chunks_count > 0
 
-        print(f"✅ Test streaming chaîne réussi")
-        print(f"   {chunks_count} chunks streamés")
+        print(f"✅ Streaming chain test passed")
+        print(f"   {chunks_count} chunks streamed")
 
     except Exception as e:
-        pytest.fail(f"Échec test streaming: {e}")
+        pytest.fail(f"Streaming test failed: {e}")
 
 
 def test_complex_chain_with_multiple_steps():
-    """Test d'une chaîne complexe avec plusieurs étapes"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    """Test of a complex chain with multiple steps"""
+    from claude_code_langchain import ClaudeCodeChatModel
     from langchain_core.runnables import RunnablePassthrough
 
-    # Créer le modèle
+    # Create model
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.5,
         max_tokens=150
     )
 
-    # Première étape : classifier
+    # First step: classify
     classify_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Classifie le texte suivant en 'positif', 'négatif' ou 'neutre'"),
+        ("system", "Classify the following text as 'positive', 'negative', or 'neutral'"),
         ("human", "{text}")
     ])
 
-    # Deuxième étape : répondre selon la classification
+    # Second step: respond based on classification
     response_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Le sentiment est {sentiment}. Réponds de manière appropriée."),
-        ("human", "Comment réagir à: {text}")
+        ("system", "The sentiment is {sentiment}. Respond appropriately."),
+        ("human", "How to react to: {text}")
     ])
 
-    # Chaîne complexe
+    # Complex chain
     classify_chain = classify_prompt | model | StrOutputParser()
 
     def create_response_input(inputs):
@@ -227,42 +227,42 @@ def test_complex_chain_with_multiple_steps():
     ) | response_prompt | model | StrOutputParser()
 
     try:
-        # Test avec un texte
+        # Test with a text
         response = complex_chain.invoke({
-            "text": "Ce produit est absolument fantastique!"
+            "text": "This product is absolutely fantastic!"
         })
 
-        # Valider
+        # Validate
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Test chaîne complexe réussi")
-        print(f"   Réponse: {response[:150]}...")
+        print(f"✅ Complex chain test passed")
+        print(f"   Response: {response[:150]}...")
 
     except Exception as e:
-        pytest.fail(f"Échec test chaîne complexe: {e}")
+        pytest.fail(f"Complex chain test failed: {e}")
 
 
 if __name__ == "__main__":
-    # Exécuter les tests
-    print("🧪 Tests d'intégration LangChain\n")
+    # Run the tests
+    print("🧪 LangChain Integration Tests\n")
 
-    print("1. Test chaîne simple...")
+    print("1. Testing simple chain...")
     test_simple_chain()
 
-    print("\n2. Test avec parser...")
+    print("\n2. Testing with parser...")
     test_chain_with_parser()
 
-    print("\n3. Test async...")
+    print("\n3. Testing async...")
     asyncio.run(test_async_chain())
 
-    print("\n4. Test batch...")
+    print("\n4. Testing batch processing...")
     test_batch_processing()
 
-    print("\n5. Test streaming chaîne...")
+    print("\n5. Testing chain streaming...")
     test_streaming_chain()
 
-    print("\n6. Test chaîne complexe...")
+    print("\n6. Testing complex chain...")
     test_complex_chain_with_multiple_steps()
 
-    print("\n✅ Tous les tests d'intégration passés!")
+    print("\n✅ All integration tests passed!")

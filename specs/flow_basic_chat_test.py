@@ -9,7 +9,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 def test_basic_chat_invocation():
     """Test d'invocation basique du modèle"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
     model = ClaudeCodeChatModel(
@@ -45,7 +45,7 @@ def test_basic_chat_invocation():
 @pytest.mark.asyncio
 async def test_async_chat_invocation():
     """Test d'invocation asynchrone du modèle"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
     model = ClaudeCodeChatModel(
@@ -78,7 +78,7 @@ async def test_async_chat_invocation():
 
 def test_streaming_chat():
     """Test du streaming de réponses"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
     model = ClaudeCodeChatModel(
@@ -111,7 +111,7 @@ def test_streaming_chat():
 
 def test_with_system_prompt():
     """Test avec prompt système"""
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
     from langchain_core.messages import SystemMessage
 
     # Créer le modèle avec prompt système

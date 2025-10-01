@@ -18,7 +18,7 @@ def test_flow_sync_streaming_basic():
     Test synchronous streaming flow - user receives incremental chunks.
     Tests the public stream() method as a black box.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model instance
     model = ClaudeCodeChatModel(
@@ -70,7 +70,7 @@ async def test_flow_async_streaming_basic():
     Test asynchronous streaming flow - user processes chunks in real-time.
     Tests the public astream() method as a black box.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model instance
     model = ClaudeCodeChatModel(
@@ -113,7 +113,7 @@ def test_flow_streaming_vs_nonstreaming_consistency():
     Test that streaming produces the same final content as non-streaming.
     Validates public API consistency between invoke() and stream().
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model with fixed temperature for consistency
     model = ClaudeCodeChatModel(
@@ -151,7 +151,7 @@ def test_flow_chain_streaming():
     Test streaming through a LangChain chain pipeline.
     Validates that streaming works with prompt templates and parsers.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model
     model = ClaudeCodeChatModel(
@@ -197,7 +197,7 @@ async def test_flow_async_chain_streaming_with_parser():
     Test async streaming through a chain with an output parser.
     Validates end-to-end streaming with transformations.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model
     model = ClaudeCodeChatModel(
@@ -240,7 +240,7 @@ def test_flow_streaming_cancellation():
     Test that streaming can be interrupted by the user.
     Validates proper resource cleanup on early termination.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model
     model = ClaudeCodeChatModel(

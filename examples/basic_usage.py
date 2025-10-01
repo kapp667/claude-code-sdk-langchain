@@ -11,7 +11,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 
 # Import de notre adaptateur
-from src.claude_code_langchain import ClaudeCodeChatModel
+from claude_code_langchain import ClaudeCodeChatModel
 
 
 def example_simple_invocation():

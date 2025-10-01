@@ -17,7 +17,7 @@ def test_flow_cli_not_found_error():
     """
     # Temporarily mock the claude-code-sdk import to simulate CLI not found
     with patch('claude_code_langchain.chat_model.CLAUDE_CODE_AVAILABLE', False):
-        from src.claude_code_langchain import ClaudeCodeChatModel
+        from claude_code_langchain import ClaudeCodeChatModel
 
         # User attempts to create model without CLI
         with pytest.raises(ImportError) as exc_info:
@@ -39,7 +39,7 @@ def test_flow_invalid_model_parameters():
     Test user experience with invalid model configuration.
     Users should receive clear feedback about parameter constraints.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Test 1: Invalid temperature (too high)
     try:
@@ -77,7 +77,7 @@ def test_flow_process_error_handling():
     Test user experience when Claude Code process fails.
     Simulates real-world process failures and verifies error reporting.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create a valid model
     model = ClaudeCodeChatModel(
@@ -115,7 +115,7 @@ def test_flow_json_decode_error():
     Test user experience when Claude Code returns malformed JSON.
     Ensures users get helpful information about parsing failures.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
     model = ClaudeCodeChatModel(
@@ -152,7 +152,7 @@ async def test_flow_async_error_handling():
     Test error handling in async operations.
     Ensures async errors are properly propagated to users.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
     model = ClaudeCodeChatModel(
@@ -188,7 +188,7 @@ def test_flow_empty_response_handling():
     Test handling of empty or null responses from Claude Code.
     Ensures graceful handling of edge cases.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
     model = ClaudeCodeChatModel(
@@ -213,7 +213,7 @@ def test_flow_streaming_error_recovery():
     Test error handling during streaming operations.
     Validates that streaming errors don't leave system in bad state.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
     model = ClaudeCodeChatModel(
@@ -253,7 +253,7 @@ def test_flow_error_message_quality():
     Test that error messages provide actionable information.
     Validates the user experience when errors occur.
     """
-    from src.claude_code_langchain import ClaudeCodeChatModel
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Test various error scenarios and check message quality
     errors_to_test = [
