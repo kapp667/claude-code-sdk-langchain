@@ -3,10 +3,7 @@ Modèle de chat LangChain utilisant Claude Code SDK
 """
 
 import asyncio
-from typing import (
-    Any, Dict, Iterator, List, Optional, AsyncIterator,
-    Mapping, Union
-)
+from typing import Any, Dict, Iterator, List, Optional, AsyncIterator, Mapping, Union
 
 from langchain_core.callbacks import (
     AsyncCallbackManagerForLLMRun,
@@ -38,6 +35,7 @@ try:
         ProcessError,
         CLIJSONDecodeError,
     )
+
     CLAUDE_CODE_AVAILABLE = True
 except ImportError as e:
     CLAUDE_CODE_AVAILABLE = False
@@ -211,17 +209,15 @@ class ClaudeCodeChatModel(BaseChatModel):
             loop = asyncio.get_running_loop()
             # Si on est dans une boucle, utiliser run_in_executor
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(
-                    asyncio.run,
-                    self._agenerate(messages, stop, None, **kwargs)
+                    asyncio.run, self._agenerate(messages, stop, None, **kwargs)
                 )
                 return future.result()
         except RuntimeError:
             # Pas de boucle active, on peut utiliser asyncio.run directement
-            return asyncio.run(
-                self._agenerate(messages, stop, None, **kwargs)
-            )
+            return asyncio.run(self._agenerate(messages, stop, None, **kwargs))
 
     async def _agenerate(
         self,
@@ -299,13 +295,11 @@ class ClaudeCodeChatModel(BaseChatModel):
             )
         except ProcessError as e:
             raise RuntimeError(
-                f"Claude Code process error (exit code {e.exit_code}): {e}\n"
-                f"Stderr: {e.stderr}"
+                f"Claude Code process error (exit code {e.exit_code}): {e}\n" f"Stderr: {e.stderr}"
             )
         except CLIJSONDecodeError as e:
             raise RuntimeError(
-                f"Failed to parse Claude Code response: {e}\n"
-                f"Invalid line: {e.line}"
+                f"Failed to parse Claude Code response: {e}\n" f"Invalid line: {e.line}"
             )
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -337,7 +331,7 @@ class ClaudeCodeChatModel(BaseChatModel):
             import queue
 
             chunk_queue = queue.Queue()
-            exception_holder = {'exception': None}
+            exception_holder = {"exception": None}
             done_event = threading.Event()
 
             def run_async_generator():
@@ -350,13 +344,13 @@ class ClaudeCodeChatModel(BaseChatModel):
                             async for chunk in self._astream(messages, stop, None, **kwargs):
                                 chunk_queue.put(chunk)
                         except Exception as e:
-                            exception_holder['exception'] = e
+                            exception_holder["exception"] = e
                         finally:
                             done_event.set()
 
                     loop.run_until_complete(stream_chunks())
                 except Exception as e:
-                    exception_holder['exception'] = e
+                    exception_holder["exception"] = e
                     done_event.set()
                 finally:
                     loop.close()
@@ -371,7 +365,11 @@ class ClaudeCodeChatModel(BaseChatModel):
                     chunk = chunk_queue.get(timeout=0.1)
                     # ChatGenerationChunk contient un AIMessageChunk dans .message
                     # Vérifier content is not None (pas juste truthiness)
-                    if run_manager and hasattr(chunk, 'message') and chunk.message.content is not None:
+                    if (
+                        run_manager
+                        and hasattr(chunk, "message")
+                        and chunk.message.content is not None
+                    ):
                         run_manager.on_llm_new_token(chunk.message.content)
                     # On retourne le ChatGenerationChunk complet pour LangChain
                     yield chunk
@@ -379,8 +377,8 @@ class ClaudeCodeChatModel(BaseChatModel):
                     continue
 
             # Vérifier les exceptions après traitement
-            if exception_holder['exception']:
-                raise exception_holder['exception']
+            if exception_holder["exception"]:
+                raise exception_holder["exception"]
 
             # Attendre que le thread se termine proprement (pas de timeout)
             thread.join()
@@ -424,7 +422,9 @@ class ClaudeCodeChatModel(BaseChatModel):
                 prompt = self._converter.langchain_to_claude_prompt(messages)
 
                 # Stream la réponse - cette boucle async s'exécute dans une task isolée
-                async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
+                async for message in query(
+                    prompt=prompt, options=self._get_claude_options(messages)
+                ):
                     if isinstance(message, ResultMessage):
                         # Vérifier les erreurs
                         if message.is_error:
@@ -443,8 +443,7 @@ class ClaudeCodeChatModel(BaseChatModel):
                                 # Optionnel: inclure le thinking dans les métadonnées
                                 chunk = ChatGenerationChunk(
                                     message=AIMessageChunk(
-                                        content="",
-                                        additional_kwargs={"thinking": block.thinking}
+                                        content="", additional_kwargs={"thinking": block.thinking}
                                     )
                                 )
                                 await chunk_queue.put(chunk)

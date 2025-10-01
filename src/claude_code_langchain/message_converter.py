@@ -10,7 +10,7 @@ from langchain_core.messages import (
     AIMessage,
     SystemMessage,
     ToolMessage,
-    FunctionMessage
+    FunctionMessage,
 )
 
 logger = logging.getLogger(__name__)
@@ -125,29 +125,19 @@ class MessageConverter:
         for message in messages:
             if isinstance(message, SystemMessage):
                 # Ajouter comme contexte système
-                result.append({
-                    "type": "text",
-                    "text": f"[System Instructions]\n{message.content}"
-                })
+                result.append({"type": "text", "text": f"[System Instructions]\n{message.content}"})
 
             elif isinstance(message, HumanMessage):
-                result.append({
-                    "type": "text",
-                    "text": message.content
-                })
+                result.append({"type": "text", "text": message.content})
 
             elif isinstance(message, AIMessage):
                 # Pour maintenir le contexte de conversation
-                result.append({
-                    "type": "text",
-                    "text": f"[Previous Assistant Response]\n{message.content}"
-                })
+                result.append(
+                    {"type": "text", "text": f"[Previous Assistant Response]\n{message.content}"}
+                )
 
             elif isinstance(message, (ToolMessage, FunctionMessage)):
-                result.append({
-                    "type": "text",
-                    "text": f"[Tool Output]\n{message.content}"
-                })
+                result.append({"type": "text", "text": f"[Tool Output]\n{message.content}"})
 
         return result
 
@@ -191,16 +181,22 @@ class MessageConverter:
         try:
             if isinstance(claude_message, ResultMessage):
                 # Extraction sûre avec validation
-                if hasattr(claude_message, 'usage') and claude_message.usage:
+                if hasattr(claude_message, "usage") and claude_message.usage:
                     metadata["usage"] = claude_message.usage
 
-                if hasattr(claude_message, 'total_cost_usd') and claude_message.total_cost_usd is not None:
+                if (
+                    hasattr(claude_message, "total_cost_usd")
+                    and claude_message.total_cost_usd is not None
+                ):
                     metadata["cost_usd"] = float(claude_message.total_cost_usd)
 
-                if hasattr(claude_message, 'duration_ms') and claude_message.duration_ms is not None:
+                if (
+                    hasattr(claude_message, "duration_ms")
+                    and claude_message.duration_ms is not None
+                ):
                     metadata["duration_ms"] = int(claude_message.duration_ms)
 
-                if hasattr(claude_message, 'session_id') and claude_message.session_id:
+                if hasattr(claude_message, "session_id") and claude_message.session_id:
                     metadata["session_id"] = str(claude_message.session_id)
 
         except (AttributeError, TypeError, ValueError) as e:

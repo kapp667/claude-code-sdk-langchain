@@ -16,14 +16,12 @@ def test_flow_cli_not_found_error():
     Simulates the real user scenario of missing CLI.
     """
     # Temporarily mock the claude-code-sdk import to simulate CLI not found
-    with patch('claude_code_langchain.chat_model.CLAUDE_CODE_AVAILABLE', False):
+    with patch("claude_code_langchain.chat_model.CLAUDE_CODE_AVAILABLE", False):
         from claude_code_langchain import ClaudeCodeChatModel
 
         # User attempts to create model without CLI
         with pytest.raises(ImportError) as exc_info:
-            model = ClaudeCodeChatModel(
-                model="claude-sonnet-4-20250514"
-            )
+            model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
         # Verify user receives helpful error message
         error_message = str(exc_info.value)
@@ -44,8 +42,7 @@ def test_flow_invalid_model_parameters():
     # Test 1: Invalid temperature (too high)
     try:
         model = ClaudeCodeChatModel(
-            model="claude-sonnet-4-20250514",
-            temperature=2.5  # Invalid: should be 0.0 to 1.0
+            model="claude-sonnet-4-20250514", temperature=2.5  # Invalid: should be 0.0 to 1.0
         )
         # Model creation might succeed, but using it should validate
         # This is implementation-dependent, so we test the actual behavior
@@ -61,7 +58,7 @@ def test_flow_invalid_model_parameters():
     try:
         model = ClaudeCodeChatModel(
             model="claude-sonnet-4-20250514",
-            permission_mode="invalid_mode"  # Not a valid permission mode
+            permission_mode="invalid_mode",  # Not a valid permission mode
         )
         # Try to use it
         response = model.invoke([HumanMessage(content="test")])
@@ -80,20 +77,15 @@ def test_flow_process_error_handling():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create a valid model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7)
 
     # Mock a process error during invocation
     from claude_code_sdk import ProcessError
 
-    with patch('claude_code_langchain.chat_model.query') as mock_query:
+    with patch("claude_code_langchain.chat_model.query") as mock_query:
         # Simulate process error with exit code and stderr
         mock_query.side_effect = ProcessError(
-            "Claude Code process failed",
-            exit_code=1,
-            stderr="Error: Unable to authenticate"
+            "Claude Code process failed", exit_code=1, stderr="Error: Unable to authenticate"
         )
 
         # User attempts to invoke
@@ -118,18 +110,15 @@ def test_flow_json_decode_error():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514"
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
     # Mock JSON decode error
     from claude_code_sdk import CLIJSONDecodeError
 
-    with patch('claude_code_langchain.chat_model.query') as mock_query:
+    with patch("claude_code_langchain.chat_model.query") as mock_query:
         # Simulate malformed JSON response
         mock_query.side_effect = CLIJSONDecodeError(
-            "Invalid JSON",
-            line='{"content": "test", invalid}'
+            "Invalid JSON", line='{"content": "test", invalid}'
         )
 
         # User attempts invocation
@@ -155,14 +144,12 @@ async def test_flow_async_error_handling():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514"
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
     # Mock an async error
     from claude_code_sdk import CLINotFoundError
 
-    with patch('claude_code_langchain.chat_model.query') as mock_query:
+    with patch("claude_code_langchain.chat_model.query") as mock_query:
         # Create async generator that raises error
         async def error_generator():
             if False:  # Make it a generator
@@ -191,16 +178,14 @@ def test_flow_empty_response_handling():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514"
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
     # Test with empty message (edge case)
     try:
         response = model.invoke([HumanMessage(content="")])
         # If it succeeds, verify response is valid
         assert response is not None
-        assert hasattr(response, 'content')
+        assert hasattr(response, "content")
         print("✅ Empty message handled gracefully")
     except (ValueError, RuntimeError) as e:
         # If it fails, error should be descriptive
@@ -216,17 +201,16 @@ def test_flow_streaming_error_recovery():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514"
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
     # Mock streaming error midway
     from claude_code_sdk import ProcessError
 
-    with patch('claude_code_langchain.chat_model.query') as mock_query:
+    with patch("claude_code_langchain.chat_model.query") as mock_query:
         # Create async generator that fails after first chunk
         async def failing_generator():
             from claude_code_sdk import AssistantMessage, TextBlock
+
             # First chunk succeeds
             yield AssistantMessage(content=[TextBlock(text="Starting response...")])
             # Then error occurs

@@ -12,11 +12,7 @@ def test_basic_chat_invocation():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7,
-        max_tokens=500
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7, max_tokens=500)
 
     # Tester l'invocation synchrone
     messages = [HumanMessage(content="Bonjour, qui es-tu?")]
@@ -48,11 +44,7 @@ async def test_async_chat_invocation():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.5,
-        max_tokens=300
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=300)
 
     # Tester l'invocation asynchrone
     messages = [HumanMessage(content="Explique LangChain en une phrase")]
@@ -67,7 +59,9 @@ async def test_async_chat_invocation():
 
         # Vérifier les métadonnées si disponibles
         if response.response_metadata:
-            assert "model" in response.additional_kwargs or "session_id" in response.response_metadata
+            assert (
+                "model" in response.additional_kwargs or "session_id" in response.response_metadata
+            )
 
         print(f"✅ Test async réussi")
         print(f"   Réponse: {response.content}")
@@ -81,10 +75,7 @@ def test_streaming_chat():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7)
 
     # Tester le streaming
     messages = [HumanMessage(content="Compte de 1 à 5")]
@@ -119,13 +110,13 @@ def test_with_system_prompt():
         model="claude-sonnet-4-20250514",
         system_prompt="Tu es un expert Python qui répond de manière concise.",
         temperature=0.3,
-        max_tokens=200
+        max_tokens=200,
     )
 
     # Tester avec message système
     messages = [
         SystemMessage(content="Réponds toujours en commençant par 'Python:'"),
-        HumanMessage(content="Qu'est-ce qu'une liste?")
+        HumanMessage(content="Qu'est-ce qu'une liste?"),
     ]
 
     try:

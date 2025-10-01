@@ -21,11 +21,7 @@ def test_flow_sync_streaming_basic():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model instance
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7,
-        max_tokens=300
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7, max_tokens=300)
 
     # User requests a numbered list (promotes multi-chunk response)
     messages = [HumanMessage(content="List 3 benefits of Python programming, numbered 1-3")]
@@ -38,9 +34,9 @@ def test_flow_sync_streaming_basic():
     for chunk in model.stream(messages):
         chunks_received.append(chunk)
         # Le chunk peut être un AIMessageChunk ou ChatGenerationChunk
-        if hasattr(chunk, 'content'):
+        if hasattr(chunk, "content"):
             full_content += chunk.content
-        elif hasattr(chunk, 'message') and hasattr(chunk.message, 'content'):
+        elif hasattr(chunk, "message") and hasattr(chunk.message, "content"):
             full_content += chunk.message.content
 
     # Validate streaming occurred
@@ -54,11 +50,14 @@ def test_flow_sync_streaming_basic():
     # Verify chunk types
     from langchain_core.messages import AIMessageChunk
     from langchain_core.outputs import ChatGenerationChunk
+
     for chunk in chunks_received:
         # LangChain peut retourner soit ChatGenerationChunk soit AIMessageChunk directement
-        assert isinstance(chunk, (ChatGenerationChunk, AIMessageChunk)), f"Invalid chunk type: {type(chunk)}"
+        assert isinstance(
+            chunk, (ChatGenerationChunk, AIMessageChunk)
+        ), f"Invalid chunk type: {type(chunk)}"
         if isinstance(chunk, ChatGenerationChunk):
-            assert hasattr(chunk, 'message'), "Chunk missing message attribute"
+            assert hasattr(chunk, "message"), "Chunk missing message attribute"
             assert isinstance(chunk.message, AIMessageChunk), "Invalid message type in chunk"
 
     print(f"✅ Sync streaming test passed: {len(chunks_received)} chunks received")
@@ -73,11 +72,7 @@ async def test_flow_async_streaming_basic():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model instance
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7,
-        max_tokens=400
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7, max_tokens=400)
 
     # User prepares message
     messages = [HumanMessage(content="Explain async programming in 3 steps")]
@@ -92,7 +87,7 @@ async def test_flow_async_streaming_basic():
     async for chunk in model.astream(messages):
         chunk_times.append(time.time() - start_time)
         chunks_received.append(chunk)
-        if hasattr(chunk, 'content'):
+        if hasattr(chunk, "content"):
             full_content += chunk.content
 
     # Validate async streaming
@@ -102,10 +97,14 @@ async def test_flow_async_streaming_basic():
     # Verify chunks arrived over time (not all at once)
     if len(chunk_times) > 1:
         # Check that chunks arrived at different times
-        time_differences = [chunk_times[i+1] - chunk_times[i] for i in range(len(chunk_times)-1)]
+        time_differences = [
+            chunk_times[i + 1] - chunk_times[i] for i in range(len(chunk_times) - 1)
+        ]
         assert any(diff > 0 for diff in time_differences), "Chunks should arrive incrementally"
 
-    print(f"✅ Async streaming test passed: {len(chunks_received)} chunks over {chunk_times[-1]:.2f}s")
+    print(
+        f"✅ Async streaming test passed: {len(chunks_received)} chunks over {chunk_times[-1]:.2f}s"
+    )
 
 
 def test_flow_streaming_vs_nonstreaming_consistency():
@@ -119,7 +118,7 @@ def test_flow_streaming_vs_nonstreaming_consistency():
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.2,  # Lower temperature for more consistent responses
-        max_tokens=200
+        max_tokens=200,
     )
 
     # User prepares same message for both methods
@@ -132,7 +131,7 @@ def test_flow_streaming_vs_nonstreaming_consistency():
     # User gets streaming response
     streaming_content = ""
     for chunk in model.stream(messages):
-        if hasattr(chunk, 'content'):
+        if hasattr(chunk, "content"):
             streaming_content += chunk.content
 
     # Both should provide an answer (content may vary slightly due to model behavior)
@@ -154,17 +153,15 @@ def test_flow_chain_streaming():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7,
-        max_tokens=300
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7, max_tokens=300)
 
     # User creates a prompt template
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a storyteller. Tell a story about {topic} in 3 sentences."),
-        ("human", "{request}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "You are a storyteller. Tell a story about {topic} in 3 sentences."),
+            ("human", "{request}"),
+        ]
+    )
 
     # User creates a chain
     chain = prompt | model
@@ -173,12 +170,9 @@ def test_flow_chain_streaming():
     chunks_count = 0
     full_story = ""
 
-    for chunk in chain.stream({
-        "topic": "a brave robot",
-        "request": "Make it inspiring"
-    }):
+    for chunk in chain.stream({"topic": "a brave robot", "request": "Make it inspiring"}):
         chunks_count += 1
-        if hasattr(chunk, 'content'):
+        if hasattr(chunk, "content"):
             full_story += chunk.content
 
     # Validate chain streaming
@@ -200,17 +194,12 @@ async def test_flow_async_chain_streaming_with_parser():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # User creates model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.5,
-        max_tokens=200
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=200)
 
     # User creates chain with parser
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful assistant"),
-        ("human", "{question}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", "You are a helpful assistant"), ("human", "{question}")]
+    )
 
     parser = StrOutputParser()
     chain = prompt | model | parser
@@ -246,11 +235,13 @@ def test_flow_streaming_cancellation():
     model = ClaudeCodeChatModel(
         model="claude-sonnet-4-20250514",
         temperature=0.7,
-        max_tokens=1000  # Large limit to ensure multiple chunks
+        max_tokens=1000,  # Large limit to ensure multiple chunks
     )
 
     # User starts streaming but stops after a few chunks
-    messages = [HumanMessage(content="Count from 1 to 100 slowly, with explanation for each number")]
+    messages = [
+        HumanMessage(content="Count from 1 to 100 slowly, with explanation for each number")
+    ]
 
     chunks_before_stop = 3
     collected_chunks = []
@@ -266,8 +257,7 @@ def test_flow_streaming_cancellation():
 
     # Stream should have provided partial content
     partial_content = "".join(
-        chunk.content for chunk in collected_chunks
-        if hasattr(chunk, 'content')
+        chunk.content for chunk in collected_chunks if hasattr(chunk, "content")
     )
     assert len(partial_content) > 0, "No partial content before interruption"
 

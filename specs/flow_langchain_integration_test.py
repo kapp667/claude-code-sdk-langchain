@@ -14,26 +14,18 @@ def test_simple_chain():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create components
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.5,
-        max_tokens=200
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=200)
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are an assistant that responds about {language}"),
-        ("human", "{question}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", "You are an assistant that responds about {language}"), ("human", "{question}")]
+    )
 
     # Create the chain
     chain = prompt | model
 
     try:
         # Invoke the chain
-        response = chain.invoke({
-            "language": "Python",
-            "question": "What is a list comprehension?"
-        })
+        response = chain.invoke({"language": "Python", "question": "What is a list comprehension?"})
 
         # Validate
         assert response is not None
@@ -51,16 +43,11 @@ def test_chain_with_parser():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create components
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.3,
-        max_tokens=150
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.3, max_tokens=150)
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "Always respond very concisely"),
-        ("human", "{input}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", "Always respond very concisely"), ("human", "{input}")]
+    )
 
     parser = StrOutputParser()
 
@@ -69,9 +56,7 @@ def test_chain_with_parser():
 
     try:
         # Invoke the chain
-        response = chain.invoke({
-            "input": "Define Python in 5 words maximum"
-        })
+        response = chain.invoke({"input": "Define Python in 5 words maximum"})
 
         # Validate parsed string
         assert isinstance(response, str)
@@ -90,24 +75,17 @@ async def test_async_chain():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create components
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7)
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are an expert in {domain}"),
-        ("human", "Explain {concept}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", "You are an expert in {domain}"), ("human", "Explain {concept}")]
+    )
 
     chain = prompt | model | StrOutputParser()
 
     try:
         # Invoke asynchronously
-        response = await chain.ainvoke({
-            "domain": "computer science",
-            "concept": "algorithms"
-        })
+        response = await chain.ainvoke({"domain": "computer science", "concept": "algorithms"})
 
         # Validate
         assert isinstance(response, str)
@@ -125,17 +103,13 @@ def test_batch_processing():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.5,
-        max_tokens=100
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=100)
 
     # Create multiple messages
     batch_inputs = [
         [HumanMessage(content="What is 2+2?")],
         [HumanMessage(content="Capital of France?")],
-        [HumanMessage(content="Color of the sky?")]
+        [HumanMessage(content="Color of the sky?")],
     ]
 
     try:
@@ -160,14 +134,9 @@ def test_streaming_chain():
     from claude_code_langchain import ClaudeCodeChatModel
 
     # Create components
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.7
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.7)
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("human", "Tell a short story about {topic}")
-    ])
+    prompt = ChatPromptTemplate.from_messages([("human", "Tell a short story about {topic}")])
 
     chain = prompt | model
 
@@ -194,43 +163,41 @@ def test_complex_chain_with_multiple_steps():
     from langchain_core.runnables import RunnablePassthrough
 
     # Create model
-    model = ClaudeCodeChatModel(
-        model="claude-sonnet-4-20250514",
-        temperature=0.5,
-        max_tokens=150
-    )
+    model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=150)
 
     # First step: classify
-    classify_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Classify the following text as 'positive', 'negative', or 'neutral'"),
-        ("human", "{text}")
-    ])
+    classify_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "Classify the following text as 'positive', 'negative', or 'neutral'"),
+            ("human", "{text}"),
+        ]
+    )
 
     # Second step: respond based on classification
-    response_prompt = ChatPromptTemplate.from_messages([
-        ("system", "The sentiment is {sentiment}. Respond appropriately."),
-        ("human", "How to react to: {text}")
-    ])
+    response_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "The sentiment is {sentiment}. Respond appropriately."),
+            ("human", "How to react to: {text}"),
+        ]
+    )
 
     # Complex chain
     classify_chain = classify_prompt | model | StrOutputParser()
 
     def create_response_input(inputs):
         sentiment = classify_chain.invoke({"text": inputs["text"]})
-        return {
-            "sentiment": sentiment,
-            "text": inputs["text"]
-        }
+        return {"sentiment": sentiment, "text": inputs["text"]}
 
-    complex_chain = RunnablePassthrough.assign(
-        sentiment=lambda x: classify_chain.invoke({"text": x["text"]})
-    ) | response_prompt | model | StrOutputParser()
+    complex_chain = (
+        RunnablePassthrough.assign(sentiment=lambda x: classify_chain.invoke({"text": x["text"]}))
+        | response_prompt
+        | model
+        | StrOutputParser()
+    )
 
     try:
         # Test with a text
-        response = complex_chain.invoke({
-            "text": "This product is absolutely fantastic!"
-        })
+        response = complex_chain.invoke({"text": "This product is absolutely fantastic!"})
 
         # Validate
         assert isinstance(response, str)

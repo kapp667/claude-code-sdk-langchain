@@ -23,13 +23,14 @@ from typing import Optional
 
 class Colors:
     """ANSI color codes for terminal output"""
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+
+    HEADER = "\033[95m"
+    BLUE = "\033[94m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    END = "\033[0m"
+    BOLD = "\033[1m"
 
 
 def print_header(text: str):
@@ -72,12 +73,7 @@ def run_command(cmd: str, check: bool = True) -> tuple[int, str, str]:
     """
     print(f"  Running: {Colors.BOLD}{cmd}{Colors.END}")
 
-    result = subprocess.run(
-        cmd,
-        shell=True,
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
     if check and result.returncode != 0:
         print_error(f"Command failed with exit code {result.returncode}")
@@ -121,7 +117,7 @@ def confirm(prompt: str, default: bool = False) -> bool:
     if not response:
         return default
 
-    return response in ['y', 'yes']
+    return response in ["y", "yes"]
 
 
 def check_git_status():
@@ -259,29 +255,21 @@ def create_git_tag():
 
 def main():
     """Main deployment pipeline"""
-    parser = argparse.ArgumentParser(
-        description="Deploy claude-code-langchain package"
-    )
+    parser = argparse.ArgumentParser(description="Deploy claude-code-langchain package")
     parser.add_argument(
         "--target",
         choices=["testpypi", "pypi", "both"],
         default="both",
-        help="Deployment target (default: both)"
+        help="Deployment target (default: both)",
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run checks and build without publishing"
+        "--dry-run", action="store_true", help="Run checks and build without publishing"
     )
     parser.add_argument(
-        "--skip-tests",
-        action="store_true",
-        help="Skip test execution (not recommended)"
+        "--skip-tests", action="store_true", help="Skip test execution (not recommended)"
     )
     parser.add_argument(
-        "--skip-checks",
-        action="store_true",
-        help="Skip quality checks (not recommended)"
+        "--skip-checks", action="store_true", help="Skip quality checks (not recommended)"
     )
 
     args = parser.parse_args()
@@ -337,11 +325,12 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n" + "="*60)
+        print("\n\n" + "=" * 60)
         print_error("Deployment cancelled by user")
         sys.exit(1)
     except Exception as e:
         print_error(f"Unexpected error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
