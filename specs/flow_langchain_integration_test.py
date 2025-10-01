@@ -3,10 +3,11 @@ Flow test: Integration with LangChain chains
 """
 
 import asyncio
+
 import pytest
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 
 
 def test_simple_chain():
@@ -31,7 +32,7 @@ def test_simple_chain():
         assert response is not None
         assert len(response.content) > 0
 
-        print(f"✅ Simple chain test passed")
+        print("✅ Simple chain test passed")
         print(f"   Response: {response.content[:100]}...")
 
     except Exception as e:
@@ -62,7 +63,7 @@ def test_chain_with_parser():
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Chain with parser test passed")
+        print("✅ Chain with parser test passed")
         print(f"   Parsed response: {response}")
 
     except Exception as e:
@@ -91,7 +92,7 @@ async def test_async_chain():
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Async chain test passed")
+        print("✅ Async chain test passed")
         print(f"   Response: {response[:100]}...")
 
     except Exception as e:
@@ -122,7 +123,7 @@ def test_batch_processing():
             assert response is not None
             assert len(response.content) > 0
 
-        print(f"✅ Batch test passed")
+        print("✅ Batch test passed")
         print(f"   {len(responses)} responses received")
 
     except Exception as e:
@@ -150,7 +151,7 @@ def test_streaming_chain():
         print()  # New line
         assert chunks_count > 0
 
-        print(f"✅ Streaming chain test passed")
+        print("✅ Streaming chain test passed")
         print(f"   {chunks_count} chunks streamed")
 
     except Exception as e:
@@ -159,8 +160,9 @@ def test_streaming_chain():
 
 def test_complex_chain_with_multiple_steps():
     """Test of a complex chain with multiple steps"""
-    from claude_code_langchain import ClaudeCodeChatModel
     from langchain_core.runnables import RunnablePassthrough
+
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Create model
     model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514", temperature=0.5, max_tokens=150)
@@ -203,7 +205,7 @@ def test_complex_chain_with_multiple_steps():
         assert isinstance(response, str)
         assert len(response) > 0
 
-        print(f"✅ Complex chain test passed")
+        print("✅ Complex chain test passed")
         print(f"   Response: {response[:150]}...")
 
     except Exception as e:

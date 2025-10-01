@@ -3,14 +3,15 @@ Convertisseur de messages entre LangChain et Claude Code SDK
 """
 
 import logging
-from typing import List, Union, Dict, Any
+from typing import Any, Dict, List
+
 from langchain_core.messages import (
-    BaseMessage,
-    HumanMessage,
     AIMessage,
+    BaseMessage,
+    FunctionMessage,
+    HumanMessage,
     SystemMessage,
     ToolMessage,
-    FunctionMessage,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,6 @@ class MessageConverter:
             elif isinstance(message.content, list):
                 # Contenu multimodal (texte + images)
                 content_parts = []
-                has_unsupported_content = False
 
                 for part in message.content:
                     if isinstance(part, dict):
@@ -59,7 +59,6 @@ class MessageConverter:
 
                         if part_type in ["image_url", "image"] or "image_url" in part:
                             # Image détectée - non supportée
-                            has_unsupported_content = True
                             logger.warning(
                                 f"Image content detected in message {i} but NOT SUPPORTED by Claude Code SDK. "
                                 "Image will be ignored. This differs from production API behavior "

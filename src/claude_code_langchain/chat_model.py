@@ -3,7 +3,8 @@ Modèle de chat LangChain utilisant Claude Code SDK
 """
 
 import asyncio
-from typing import Any, Dict, Iterator, List, Optional, AsyncIterator, Mapping, Union
+import logging
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 
 from langchain_core.callbacks import (
     AsyncCallbackManagerForLLMRun,
@@ -18,22 +19,21 @@ from langchain_core.messages import (
 )
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from pydantic import Field
-import logging
 
 logger = logging.getLogger(__name__)
 
 # Import Claude Code SDK avec gestion d'erreurs
 try:
     from claude_code_sdk import (
-        query,
-        ClaudeCodeOptions,
         AssistantMessage,
-        TextBlock,
-        ThinkingBlock,
-        ResultMessage,
+        ClaudeCodeOptions,
+        CLIJSONDecodeError,
         CLINotFoundError,
         ProcessError,
-        CLIJSONDecodeError,
+        ResultMessage,
+        TextBlock,
+        ThinkingBlock,
+        query,
     )
 
     CLAUDE_CODE_AVAILABLE = True
@@ -41,7 +41,7 @@ except ImportError as e:
     CLAUDE_CODE_AVAILABLE = False
     logger.error(f"claude-code-sdk not installed: {e}")
 
-from .message_converter import MessageConverter
+from .message_converter import MessageConverter  # noqa: E402
 
 
 class ClaudeCodeChatModel(BaseChatModel):
@@ -206,7 +206,7 @@ class ClaudeCodeChatModel(BaseChatModel):
 
         try:
             # Vérifier si une boucle d'événements existe déjà
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # Si on est dans une boucle, utiliser run_in_executor
             import concurrent.futures
 
@@ -326,9 +326,8 @@ class ClaudeCodeChatModel(BaseChatModel):
         # Utiliser une approche thread-safe pour le streaming sync
         try:
             # Créer une nouvelle boucle d'événements dans un thread avec synchronisation
-            import concurrent.futures
-            import threading
             import queue
+            import threading
 
             chunk_queue = queue.Queue()
             exception_holder = {"exception": None}

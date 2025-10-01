@@ -4,9 +4,10 @@ Tests error conditions through public APIs only, treating the model as a black b
 Reference: flow_error_handling.md
 """
 
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
 from langchain_core.messages import HumanMessage
 
 
@@ -21,7 +22,7 @@ def test_flow_cli_not_found_error():
 
         # User attempts to create model without CLI
         with pytest.raises(ImportError) as exc_info:
-            model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
+            _model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")  # noqa: F841
 
         # Verify user receives helpful error message
         error_message = str(exc_info.value)
@@ -46,7 +47,7 @@ def test_flow_invalid_model_parameters():
         )
         # Model creation might succeed, but using it should validate
         # This is implementation-dependent, so we test the actual behavior
-        response = model.invoke([HumanMessage(content="test")])
+        _response = model.invoke([HumanMessage(content="test")])  # noqa: F841
         # If no error, that's also valid behavior (model might clamp the value)
         print("✅ Model handles invalid temperature gracefully")
     except (ValueError, RuntimeError) as e:
@@ -61,7 +62,7 @@ def test_flow_invalid_model_parameters():
             permission_mode="invalid_mode",  # Not a valid permission mode
         )
         # Try to use it
-        response = model.invoke([HumanMessage(content="test")])
+        _response = model.invoke([HumanMessage(content="test")])  # noqa: F841
         # If successful, model handles invalid modes gracefully
         print("✅ Model handles invalid permission mode gracefully")
     except (ValueError, RuntimeError) as e:
@@ -90,7 +91,7 @@ def test_flow_process_error_handling():
 
         # User attempts to invoke
         with pytest.raises(RuntimeError) as exc_info:
-            response = model.invoke([HumanMessage(content="Hello")])
+            _response = model.invoke([HumanMessage(content="Hello")])  # noqa: F841
 
         # Verify user receives detailed error information
         error_message = str(exc_info.value)
@@ -123,7 +124,7 @@ def test_flow_json_decode_error():
 
         # User attempts invocation
         with pytest.raises(RuntimeError) as exc_info:
-            response = model.invoke([HumanMessage(content="Test message")])
+            _response = model.invoke([HumanMessage(content="Test message")])  # noqa: F841
 
         # Verify error provides debugging information
         error_message = str(exc_info.value)
@@ -160,7 +161,7 @@ async def test_flow_async_error_handling():
 
         # User attempts async invocation
         with pytest.raises(RuntimeError) as exc_info:
-            response = await model.ainvoke([HumanMessage(content="Async test")])
+            _response = await model.ainvoke([HumanMessage(content="Async test")])  # noqa: F841
 
         # Verify async error handling
         error_message = str(exc_info.value)
@@ -237,7 +238,6 @@ def test_flow_error_message_quality():
     Test that error messages provide actionable information.
     Validates the user experience when errors occur.
     """
-    from claude_code_langchain import ClaudeCodeChatModel
 
     # Test various error scenarios and check message quality
     errors_to_test = [

@@ -6,11 +6,11 @@ Reference: flow_streaming.md
 
 import asyncio
 import time
-from typing import List
+
 import pytest
-from langchain_core.messages import HumanMessage, AIMessageChunk
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import AIMessageChunk, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 
 
 def test_flow_sync_streaming_basic():
@@ -48,7 +48,6 @@ def test_flow_sync_streaming_basic():
     assert len(chunks_received) >= 1, "Expected incremental streaming"
 
     # Verify chunk types
-    from langchain_core.messages import AIMessageChunk
     from langchain_core.outputs import ChatGenerationChunk
 
     for chunk in chunks_received:
@@ -142,7 +141,7 @@ def test_flow_streaming_vs_nonstreaming_consistency():
     assert "25" in non_streaming_content or "twenty-five" in non_streaming_content.lower()
     assert "25" in streaming_content or "twenty-five" in streaming_content.lower()
 
-    print(f"✅ Streaming consistency test passed")
+    print("✅ Streaming consistency test passed")
 
 
 def test_flow_chain_streaming():

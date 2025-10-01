@@ -3,8 +3,9 @@ Test de flux : Chat basique avec ClaudeCodeChatModel
 """
 
 import asyncio
+
 import pytest
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 
 def test_basic_chat_invocation():
@@ -31,7 +32,7 @@ def test_basic_chat_invocation():
         words = response.content.split()
         assert len(words) >= 3, f"Réponse trop courte: seulement {len(words)} mots"
 
-        print(f"✅ Test basique réussi")
+        print("✅ Test basique réussi")
         print(f"   Réponse: {response.content[:100]}...")
 
     except Exception as e:
@@ -63,7 +64,7 @@ async def test_async_chat_invocation():
                 "model" in response.additional_kwargs or "session_id" in response.response_metadata
             )
 
-        print(f"✅ Test async réussi")
+        print("✅ Test async réussi")
         print(f"   Réponse: {response.content}")
 
     except Exception as e:
@@ -93,7 +94,7 @@ def test_streaming_chat():
         assert chunks_received > 0, "Aucun chunk reçu"
         assert len(full_response) > 0, "Réponse vide"
 
-        print(f"\n✅ Test streaming réussi")
+        print("\n✅ Test streaming réussi")
         print(f"   {chunks_received} chunks reçus")
 
     except Exception as e:
@@ -102,8 +103,9 @@ def test_streaming_chat():
 
 def test_with_system_prompt():
     """Test avec prompt système"""
-    from claude_code_langchain import ClaudeCodeChatModel
     from langchain_core.messages import SystemMessage
+
+    from claude_code_langchain import ClaudeCodeChatModel
 
     # Créer le modèle avec prompt système
     model = ClaudeCodeChatModel(
@@ -127,7 +129,7 @@ def test_with_system_prompt():
         assert isinstance(response, AIMessage)
         assert len(response.content) > 0
 
-        print(f"✅ Test avec système réussi")
+        print("✅ Test avec système réussi")
         print(f"   Réponse: {response.content[:150]}...")
 
     except Exception as e:
