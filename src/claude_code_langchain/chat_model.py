@@ -1,5 +1,5 @@
 """
-Modèle de chat LangChain utilisant Claude Code SDK
+LangChain chat model using Claude Code SDK
 """
 
 import asyncio
@@ -46,10 +46,10 @@ from .message_converter import MessageConverter  # noqa: E402
 
 class ClaudeCodeChatModel(BaseChatModel):
     """
-    Modèle de chat LangChain utilisant Claude via votre abonnement Claude Code.
+    LangChain chat model using Claude via your Claude Code subscription.
 
-    Cela vous permet d'utiliser Claude dans LangChain SANS frais API supplémentaires,
-    en utilisant votre abonnement Claude Code existant (20$/mois).
+    This allows you to use Claude in LangChain WITHOUT additional API costs,
+    using your existing Claude Code subscription ($20/month).
 
     Limitations:
         - temperature: Accepted for API compatibility but NOT supported by Claude Code CLI
@@ -67,51 +67,51 @@ class ClaudeCodeChatModel(BaseChatModel):
                 max_tokens=1000   # WARNING: Not supported, will use default
             )
 
-            # Utilisation simple
-            response = model.invoke([HumanMessage(content="Bonjour!")])
+            # Simple usage
+            response = model.invoke([HumanMessage(content="Hello!")])
 
-            # Avec streaming
-            for chunk in model.stream([HumanMessage(content="Raconte une histoire")]):
+            # With streaming
+            for chunk in model.stream([HumanMessage(content="Tell me a story")]):
                 print(chunk.content, end="")
 
-            # Dans une chaîne LangChain
+            # In a LangChain chain
             from langchain.prompts import ChatPromptTemplate
 
             prompt = ChatPromptTemplate.from_messages([
-                ("system", "Tu es un assistant"),
+                ("system", "You are an assistant"),
                 ("human", "{input}")
             ])
 
             chain = prompt | model
-            result = chain.invoke({"input": "Qu'est-ce que LangChain?"})
+            result = chain.invoke({"input": "What is LangChain?"})
     """
 
     model_name: str = Field(default="claude-sonnet-4-20250514", alias="model")
-    """Nom du modèle Claude à utiliser - NE PAS CHANGER (Sonnet 4 confirmé par l'utilisateur)"""
+    """Claude model name to use - DO NOT CHANGE (Sonnet 4 confirmed by user)"""
 
     temperature: Optional[float] = Field(default=0.7)
-    """Température pour la génération (0.0 à 1.0) - NOT SUPPORTED by Claude Code CLI"""
+    """Temperature for generation (0.0 to 1.0) - NOT SUPPORTED by Claude Code CLI"""
 
     max_tokens: Optional[int] = Field(default=2000)
-    """Nombre maximum de tokens à générer - NOT SUPPORTED by Claude Code CLI"""
+    """Maximum number of tokens to generate - NOT SUPPORTED by Claude Code CLI"""
 
     system_prompt: Optional[str] = Field(default=None)
-    """Prompt système optionnel"""
+    """Optional system prompt"""
 
     permission_mode: str = Field(default="default")
-    """Mode de permission Claude Code: default, acceptEdits, plan, bypassPermissions"""  # type: ignore[assignment]
+    """Claude Code permission mode: default, acceptEdits, plan, bypassPermissions"""  # type: ignore[assignment]
 
     allowed_tools: List[str] = Field(default_factory=list)
-    """Liste des outils Claude Code autorisés"""
+    """List of allowed Claude Code tools"""
 
     cwd: Optional[str] = Field(default=None)
-    """Répertoire de travail pour Claude Code"""
+    """Working directory for Claude Code"""
 
     _converter: MessageConverter = MessageConverter()
-    """Convertisseur de messages"""
+    """Message converter"""
 
     def __init__(self, **kwargs):
-        """Initialise le modèle Claude Code"""
+        """Initialize the Claude Code model"""
         super().__init__(**kwargs)
 
         if not CLAUDE_CODE_AVAILABLE:
@@ -140,21 +140,21 @@ class ClaudeCodeChatModel(BaseChatModel):
             )
 
     def _get_claude_options(self, messages: List[BaseMessage]) -> ClaudeCodeOptions:
-        """Construit les options pour Claude Code SDK
+        """Build options for Claude Code SDK
 
         Args:
-            messages: Liste des messages pour déterminer si SystemMessage présent
+            messages: List of messages to determine if SystemMessage is present
 
         Returns:
-            ClaudeCodeOptions configuré
+            Configured ClaudeCodeOptions
         """
-        # Note: Temperature et max_tokens ne sont PAS supportés par le CLI Claude
-        # Ces paramètres sont acceptés pour compatibilité API mais n'ont aucun effet
-        # Warnings émis dans __init__ si valeurs non-défaut
+        # Note: Temperature and max_tokens are NOT supported by Claude CLI
+        # These parameters are accepted for API compatibility but have no effect
+        # Warnings emitted in __init__ if non-default values
 
-        # Gestion du conflit system_prompt:
-        # Si SystemMessage présent dans messages, ne pas passer system_prompt via options
-        # pour éviter d'avoir deux system prompts (un via options, un via le prompt texte)
+        # Handle system_prompt conflict:
+        # If SystemMessage present in messages, don't pass system_prompt via options
+        # to avoid having two system prompts (one via options, one via prompt text)
         has_system_message = any(isinstance(msg, SystemMessage) for msg in messages)
 
         effective_system_prompt = None if has_system_message else self.system_prompt
@@ -172,7 +172,7 @@ class ClaudeCodeChatModel(BaseChatModel):
             permission_mode=self.permission_mode,  # type: ignore[arg-type]
             allowed_tools=self.allowed_tools,
             cwd=self.cwd,
-            max_turns=1,  # Pour comportement chat simple
+            max_turns=1,  # For simple chat behavior
         )
 
     def _generate(
@@ -183,17 +183,17 @@ class ClaudeCodeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         """
-        Génération synchrone utilisant asyncio avec gestion d'erreurs améliorée.
+        Synchronous generation using asyncio with enhanced error handling.
 
         Args:
-            messages: Messages d'entrée
-            stop: Séquences d'arrêt (non supporté par Claude Code SDK)
-            run_manager: Gestionnaire de callbacks
+            messages: Input messages
+            stop: Stop sequences (not supported by Claude Code SDK)
+            run_manager: Callback manager
 
         Returns:
-            ChatResult avec la réponse générée
+            ChatResult with generated response
         """
-        # Avertir si stop sequences ou kwargs non supportés sont passés
+        # Warn if unsupported stop sequences or kwargs are passed
         if stop:
             logger.warning(
                 f"Stop sequences {stop} are not supported by Claude Code SDK and will be ignored. "
@@ -205,9 +205,9 @@ class ClaudeCodeChatModel(BaseChatModel):
             )
 
         try:
-            # Vérifier si une boucle d'événements existe déjà
+            # Check if an event loop already exists
             asyncio.get_running_loop()
-            # Si on est dans une boucle, utiliser run_in_executor
+            # If in a loop, use run_in_executor
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -216,7 +216,7 @@ class ClaudeCodeChatModel(BaseChatModel):
                 )
                 return future.result()
         except RuntimeError:
-            # Pas de boucle active, on peut utiliser asyncio.run directement
+            # No active loop, can use asyncio.run directly
             return asyncio.run(self._agenerate(messages, stop, None, **kwargs))
 
     async def _agenerate(
@@ -227,17 +227,17 @@ class ClaudeCodeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> ChatResult:
         """
-        Génération asynchrone via Claude Code SDK avec gestion d'erreurs.
+        Asynchronous generation via Claude Code SDK with error handling.
 
         Args:
-            messages: Messages d'entrée
-            stop: Séquences d'arrêt (non supporté par Claude Code SDK)
-            run_manager: Gestionnaire de callbacks asynchrone
+            messages: Input messages
+            stop: Stop sequences (not supported by Claude Code SDK)
+            run_manager: Asynchronous callback manager
 
         Returns:
-            ChatResult avec la réponse générée
+            ChatResult with generated response
         """
-        # Avertir si stop sequences ou kwargs non supportés sont passés
+        # Warn if unsupported stop sequences or kwargs are passed
         if stop:
             logger.warning(
                 f"Stop sequences {stop} are not supported by Claude Code SDK and will be ignored. "
@@ -249,18 +249,18 @@ class ClaudeCodeChatModel(BaseChatModel):
             )
 
         try:
-            # Convertir les messages LangChain en prompt pour Claude
+            # Convert LangChain messages to Claude prompt
             prompt = self._converter.langchain_to_claude_prompt(messages)
 
-            # Collecter la réponse
+            # Collect response
             result_content = ""
             thinking_content = ""
             usage_metadata = {}
 
-            # Utiliser query() pour une interaction simple
+            # Use query() for simple interaction
             async for message in query(prompt=prompt, options=self._get_claude_options(messages)):
                 if isinstance(message, AssistantMessage):
-                    # Extraire le contenu textuel et thinking
+                    # Extract text content and thinking
                     for block in message.content:
                         if isinstance(block, TextBlock):
                             result_content += block.text
@@ -268,13 +268,13 @@ class ClaudeCodeChatModel(BaseChatModel):
                             thinking_content += block.thinking
 
                 elif isinstance(message, ResultMessage):
-                    # Extraire les métadonnées d'usage
+                    # Extract usage metadata
                     usage_metadata = self._converter.extract_usage_metadata(message)
                     if message.is_error:
                         raise RuntimeError(f"Claude Code error: {message.result}")
 
-            # Créer le message de réponse LangChain
-            # Mettre thinking dans additional_kwargs pour cohérence avec streaming
+            # Create LangChain response message
+            # Put thinking in additional_kwargs for consistency with streaming
             additional_kwargs = {"model": self.model_name}
             if thinking_content:
                 additional_kwargs["thinking"] = thinking_content
@@ -313,19 +313,19 @@ class ClaudeCodeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
         """
-        Streaming synchrone avec gestion d'erreurs améliorée.
+        Synchronous streaming with enhanced error handling.
 
         Args:
-            messages: Messages d'entrée
-            stop: Séquences d'arrêt
-            run_manager: Gestionnaire de callbacks
+            messages: Input messages
+            stop: Stop sequences
+            run_manager: Callback manager
 
         Yields:
-            ChatGenerationChunk pour chaque partie de la réponse
+            ChatGenerationChunk for each part of the response
         """
-        # Utiliser une approche thread-safe pour le streaming sync
+        # Use thread-safe approach for sync streaming
         try:
-            # Créer une nouvelle boucle d'événements dans un thread avec synchronisation
+            # Create new event loop in thread with synchronization
             import queue
             import threading
 
@@ -354,32 +354,32 @@ class ClaudeCodeChatModel(BaseChatModel):
                 finally:
                     loop.close()
 
-            # Exécuter dans un thread séparé (non-daemon pour cleanup propre)
+            # Execute in separate thread (non-daemon for clean cleanup)
             thread = threading.Thread(target=run_async_generator, daemon=False)
             thread.start()
 
-            # Yielder les chunks en temps réel
+            # Yield chunks in real-time
             while not done_event.is_set() or not chunk_queue.empty():
                 try:
                     chunk = chunk_queue.get(timeout=0.1)
-                    # ChatGenerationChunk contient un AIMessageChunk dans .message
-                    # Vérifier content is not None (pas juste truthiness)
+                    # ChatGenerationChunk contains an AIMessageChunk in .message
+                    # Check content is not None (not just truthiness)
                     if (
                         run_manager
                         and hasattr(chunk, "message")
                         and chunk.message.content is not None
                     ):
                         run_manager.on_llm_new_token(chunk.message.content)
-                    # On retourne le ChatGenerationChunk complet pour LangChain
+                    # Return complete ChatGenerationChunk for LangChain
                     yield chunk
                 except queue.Empty:
                     continue
 
-            # Vérifier les exceptions après traitement
+            # Check exceptions after processing
             if exception_holder["exception"]:
                 raise exception_holder["exception"]
 
-            # Attendre que le thread se termine proprement (pas de timeout)
+            # Wait for thread to complete cleanly (no timeout)
             thread.join()
 
         except Exception as e:
@@ -394,52 +394,52 @@ class ClaudeCodeChatModel(BaseChatModel):
         **kwargs: Any,
     ) -> AsyncIterator[ChatGenerationChunk]:
         """
-        Streaming asynchrone via Claude Code SDK avec gestion des ThinkingBlock.
+        Asynchronous streaming via Claude Code SDK with ThinkingBlock handling.
 
-        Utilise une queue asyncio pour isoler le contexte anyio du SDK et éviter
-        les problèmes de cancel scope avec LangChain parsers.
+        Uses an asyncio queue to isolate the SDK's anyio context and avoid
+        cancel scope issues with LangChain parsers.
 
         Args:
-            messages: Messages d'entrée
-            stop: Séquences d'arrêt
-            run_manager: Gestionnaire de callbacks asynchrone
+            messages: Input messages
+            stop: Stop sequences
+            run_manager: Asynchronous callback manager
 
         Yields:
-            ChatGenerationChunk pour chaque partie de la réponse
+            ChatGenerationChunk for each part of the response
         """
-        # Créer une queue pour transférer les chunks entre tasks
+        # Create queue to transfer chunks between tasks
         chunk_queue: asyncio.Queue = asyncio.Queue()
         exception_holder = {"exception": None}
 
         async def consume_sdk_stream():
             """
-            Tâche dédiée qui consomme le stream SDK dans son propre contexte anyio.
-            Ceci isole le anyio task group du SDK des autres tasks LangChain.
+            Dedicated task that consumes SDK stream in its own anyio context.
+            This isolates the SDK's anyio task group from other LangChain tasks.
             """
             try:
-                # Convertir les messages en prompt
+                # Convert messages to prompt
                 prompt = self._converter.langchain_to_claude_prompt(messages)
 
-                # Stream la réponse - cette boucle async s'exécute dans une task isolée
+                # Stream response - this async loop executes in isolated task
                 async for message in query(
                     prompt=prompt, options=self._get_claude_options(messages)
                 ):
                     if isinstance(message, ResultMessage):
-                        # Vérifier les erreurs
+                        # Check for errors
                         if message.is_error:
                             raise RuntimeError(f"Claude Code error: {message.result}")
 
                     elif isinstance(message, AssistantMessage):
                         for block in message.content:
                             if isinstance(block, TextBlock):
-                                # Créer un chunk pour chaque bloc de texte
+                                # Create chunk for each text block
                                 chunk = ChatGenerationChunk(
                                     message=AIMessageChunk(content=block.text)
                                 )
                                 await chunk_queue.put(chunk)
 
                             elif isinstance(block, ThinkingBlock):
-                                # Optionnel: inclure le thinking dans les métadonnées
+                                # Optional: include thinking in metadata
                                 chunk = ChatGenerationChunk(
                                     message=AIMessageChunk(
                                         content="", additional_kwargs={"thinking": block.thinking}
@@ -447,26 +447,26 @@ class ClaudeCodeChatModel(BaseChatModel):
                                 )
                                 await chunk_queue.put(chunk)
 
-                # Signal de fin
+                # End signal
                 await chunk_queue.put(None)
 
             except Exception as e:
                 exception_holder["exception"] = e
                 await chunk_queue.put(None)
 
-        # Lancer la tâche de consommation du SDK dans un contexte isolé
+        # Launch SDK consumption task in isolated context
         consumer_task = asyncio.create_task(consume_sdk_stream())
 
         try:
-            # Yielder les chunks depuis la queue
+            # Yield chunks from queue
             while True:
                 chunk = await chunk_queue.get()
 
-                # Vérifier exception de la tâche consumer
+                # Check consumer task exception
                 if exception_holder["exception"]:
                     raise exception_holder["exception"]
 
-                # None = fin du stream
+                # None = end of stream
                 if chunk is None:
                     break
 
@@ -478,12 +478,12 @@ class ClaudeCodeChatModel(BaseChatModel):
 
         except Exception as e:
             logger.error(f"Error in async streaming: {e}")
-            # Annuler la tâche consumer si erreur
+            # Cancel consumer task if error
             consumer_task.cancel()
             raise
 
         finally:
-            # S'assurer que la tâche consumer est terminée
+            # Ensure consumer task is completed
             try:
                 await consumer_task
             except asyncio.CancelledError:
@@ -491,12 +491,12 @@ class ClaudeCodeChatModel(BaseChatModel):
 
     @property
     def _llm_type(self) -> str:
-        """Type de LLM pour identification"""
+        """LLM type for identification"""
         return "claude-code"
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
-        """Paramètres d'identification pour le tracing"""
+        """Identifying parameters for tracing"""
         return {
             "model_name": self.model_name,
             "temperature": self.temperature,
@@ -506,7 +506,7 @@ class ClaudeCodeChatModel(BaseChatModel):
 
     @property
     def _default_params(self) -> Dict[str, Any]:
-        """Paramètres par défaut du modèle"""
+        """Default model parameters"""
         return {
             "model": self.model_name,
             "temperature": self.temperature,
