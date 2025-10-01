@@ -29,13 +29,13 @@ def test_simple_chain():
     chain = prompt | model
 
     try:
-        # Invoquer la chaîne
+        # Invoke the chain
         response = chain.invoke({
-            "language": "français",
-            "question": "Qu'est-ce que Python?"
+            "language": "Python",
+            "question": "What is a list comprehension?"
         })
 
-        # Valider
+        # Validate
         assert response is not None
         assert len(response.content) > 0
 

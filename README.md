@@ -5,24 +5,24 @@
 [![LangChain](https://img.shields.io/badge/LangChain-compatible-green.svg)](https://github.com/langchain-ai/langchain)
 [![Status](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/kapp667/claude-code-sdk-langchain)
 
-Utilisez Claude via votre abonnement Claude Code (20$/mois) comme modèle LLM dans LangChain pour prototyper des applications agentiques **SANS frais API supplémentaires** !
+Use Claude via your Claude Code subscription ($20/month) as an LLM model in LangChain to prototype agentic applications **WITHOUT additional API fees**!
 
-## 🎯 Objectif
+## 🎯 Purpose
 
-Cet adaptateur permet d'utiliser votre abonnement Claude Code existant comme backend pour LangChain, vous permettant de :
-- ✅ Prototyper des applications LangChain gratuitement (via votre abonnement)
-- ✅ Tester des idées d'agents sans se soucier des coûts API
-- ✅ Migrer facilement vers l'API officielle en production
+This adapter allows you to use your existing Claude Code subscription as a backend for LangChain, enabling you to:
+- ✅ Prototype LangChain applications for free (via your subscription)
+- ✅ Test agent ideas without worrying about API costs
+- ✅ Easily migrate to the official API in production
 
 ## 📦 Installation
 
-### Via PyPI (Recommandé)
+### Via PyPI (Recommended)
 
 ```bash
-# Installation complète
+# Full installation
 pip install claude-code-langchain
 
-# Ou avec dépendances de développement
+# Or with development dependencies
 pip install claude-code-langchain[dev]
 ```
 
@@ -38,112 +38,112 @@ pixi add --pypi claude-code-langchain
 poetry add claude-code-langchain
 ```
 
-### Via GitHub (Version Développement)
+### Via GitHub (Development Version)
 
 ```bash
 pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git
 ```
 
-### Prérequis
+### Prerequisites
 
-Le **Claude Code CLI** doit être installé et configuré :
+The **Claude Code CLI** must be installed and configured:
 
 ```bash
 npm install -g @anthropic-ai/claude-code
 ```
 
-## 🚀 Utilisation Rapide
+## 🚀 Quick Start
 
 ```python
 from claude_code_langchain import ClaudeCodeChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
-# Créer le modèle (utilise votre abonnement Claude Code)
+# Create the model (uses your Claude Code subscription)
 model = ClaudeCodeChatModel(
     model="claude-sonnet-4-20250514",
     temperature=0.7
 )
 
-# Utilisation simple
-response = model.invoke("Qu'est-ce que LangChain?")
+# Simple usage
+response = model.invoke("What is LangChain?")
 print(response.content)
 
-# Dans une chaîne LangChain
+# In a LangChain chain
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "Tu es un assistant expert en {domain}"),
+    ("system", "You are an expert in {domain}"),
     ("human", "{question}")
 ])
 
 chain = prompt | model
 result = chain.invoke({
     "domain": "Python",
-    "question": "Comment créer une API REST?"
+    "question": "How to create a REST API?"
 })
 ```
 
 ## 🔄 Streaming
 
 ```python
-# Streaming de réponses
-for chunk in model.stream("Raconte une histoire"):
+# Response streaming
+for chunk in model.stream("Tell me a story"):
     print(chunk.content, end="")
 
-# Streaming asynchrone
-async for chunk in model.astream("Liste 5 idées"):
+# Async streaming
+async for chunk in model.astream("List 5 ideas"):
     print(chunk.content, end="")
 ```
 
-## 🔗 Intégration LangChain Complète
+## 🔗 Full LangChain Integration
 
-L'adaptateur supporte toutes les fonctionnalités LangChain :
-- ✅ Invocation synchrone/asynchrone
+The adapter supports all LangChain features:
+- ✅ Synchronous/asynchronous invocation
 - ✅ Streaming
 - ✅ Batch processing
-- ✅ Intégration LCEL (LangChain Expression Language)
-- ✅ Chaînes et agents
+- ✅ LCEL (LangChain Expression Language) integration
+- ✅ Chains and agents
 
-## 📝 Exemples
+## 📝 Examples
 
-Voir le dossier `examples/` pour des exemples complets :
-- `basic_usage.py` - Exemples d'utilisation variés
-- Tests dans `specs/` - Tests de flux pragmatiques
+See the `examples/` folder for complete examples:
+- `basic_usage.py` - Various usage examples
+- Tests in `specs/` - Pragmatic flow tests
 
 ## 🧪 Tests
 
 ```bash
-# Exécuter les tests de flux
+# Run flow tests
 python specs/flow_basic_chat_test.py
 python specs/flow_langchain_integration_test.py
 
-# Ou avec pytest
+# Or with pytest
 pytest specs/
 ```
 
-## 🔄 Migration vers Production
+## 🔄 Migration to Production
 
-Quand vous êtes prêt pour la production, remplacez simplement :
+When you're ready for production, simply replace:
 
 ```python
-# Développement (votre abonnement)
-from src.claude_code_langchain import ClaudeCodeChatModel
+# Development (your subscription)
+from claude_code_langchain import ClaudeCodeChatModel
 model = ClaudeCodeChatModel(model="claude-sonnet-4-20250514")
 
-# Production (API officielle)
+# Production (official API)
 from langchain_anthropic import ChatAnthropic
 model = ChatAnthropic(model="claude-3-opus-20240229", api_key="sk-...")
 ```
 
-Le reste de votre code reste identique !
+The rest of your code remains identical!
 
 ## ⚙️ Configuration
 
 ```python
 model = ClaudeCodeChatModel(
-    model="claude-sonnet-4-20250514",     # Modèle Claude Sonnet 4
-    temperature=0.7,                      # ⚠️ NON SUPPORTÉ (valeur ignorée)
-    max_tokens=2000,                      # ⚠️ NON SUPPORTÉ (valeur ignorée)
-    system_prompt="Tu es un expert...",  # Prompt système
-    permission_mode="default",            # Mode permissions Claude Code
+    model="claude-sonnet-4-20250514",     # Claude Sonnet 4 model
+    temperature=0.7,                      # ⚠️ NOT SUPPORTED (value ignored)
+    max_tokens=2000,                      # ⚠️ NOT SUPPORTED (value ignored)
+    system_prompt="You are an expert...", # System prompt
+    permission_mode="default",            # Claude Code permission mode
 )
 ```
 
@@ -152,173 +152,173 @@ model = ClaudeCodeChatModel(
 ```
 LangChain App
      ↓
-ClaudeCodeChatModel (cet adaptateur)
+ClaudeCodeChatModel (this adapter)
      ↓
-claude-code-sdk (SDK Python)
+claude-code-sdk (Python SDK)
      ↓
 Claude Code CLI
      ↓
-Claude (via votre abonnement)
+Claude (via your subscription)
 ```
 
-## ⚠️ Limitations et Avertissements
+## ⚠️ Limitations and Warnings
 
-Cette section documente les limitations connues de l'adaptateur. Ces limitations sont **intentionnelles** - elles représentent les trade-offs entre prototypage cost-free et API de production. L'adaptateur émet des **warnings runtime** pour vous prévenir quand vous utilisez des fonctionnalités non supportées.
+This section documents the adapter's known limitations. These limitations are **intentional** - they represent the trade-offs between cost-free prototyping and production API. The adapter emits **runtime warnings** to alert you when using unsupported features.
 
-### 🌡️ Temperature et Max_Tokens
+### 🌡️ Temperature and Max_Tokens
 
-**Limitation** : Le Claude Code CLI ne supporte pas les paramètres `temperature` et `max_tokens`.
+**Limitation**: The Claude Code CLI does not support `temperature` and `max_tokens` parameters.
 
-**Comportement** :
-- Ces paramètres sont **acceptés pour compatibilité API** (évite de casser votre code)
-- Ils **n'ont aucun effet** sur la génération
-- Un **warning est émis** au moment de l'initialisation si vous spécifiez des valeurs non-défaut
+**Behavior**:
+- These parameters are **accepted for API compatibility** (prevents breaking your code)
+- They **have no effect** on generation
+- A **warning is emitted** during initialization if you specify non-default values
 
-**Pour le Développement (Claude Code):**
+**For Development (Claude Code):**
 ```python
-model = ClaudeCodeChatModel()  # Utilise les valeurs par défaut du modèle
-# ⚠️ temperature=0.7 et max_tokens=2000 n'auront aucun effet
+model = ClaudeCodeChatModel()  # Uses model's default values
+# ⚠️ temperature=0.7 and max_tokens=2000 will have no effect
 ```
 
-**Pour la Production (avec contrôle des paramètres):**
+**For Production (with parameter control):**
 ```python
 from langchain_anthropic import ChatAnthropic
 model = ChatAnthropic(
-    temperature=0.7,      # ✅ Fonctionne en production
-    max_tokens=1000,      # ✅ Fonctionne en production
+    temperature=0.7,      # ✅ Works in production
+    max_tokens=1000,      # ✅ Works in production
     api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 ```
 
-**Pourquoi ?** Le CLI Claude Code ne expose pas de flags `--temperature` ou `--max-tokens`. Investigation complète : [`docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md`](docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md)
+**Why?** The Claude Code CLI does not expose `--temperature` or `--max-tokens` flags. Full investigation: [`docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md`](docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md)
 
-**Solution** : Si vous avez besoin du contrôle de température ou de limite de tokens pendant le développement, utilisez directement l'API de production avec votre clé API Anthropic.
+**Solution**: If you need temperature control or token limits during development, use the production API directly with your Anthropic API key.
 
 ---
 
-### 🖼️ Vision et Contenu Multimodal
+### 🖼️ Vision and Multimodal Content
 
-**Limitation** : Les images et autres contenus non-texte ne sont pas supportés.
+**Limitation**: Images and other non-text content are not supported.
 
-**Comportement** :
-- Le texte est extrait et traité
-- Les images sont **silencieusement ignorées**
-- Un **warning est émis** quand une image est détectée dans les messages
+**Behavior**:
+- Text is extracted and processed
+- Images are **silently ignored**
+- A **warning is emitted** when an image is detected in messages
 
-**Exemple** :
+**Example**:
 ```python
 messages = [
     HumanMessage(content=[
-        {"type": "text", "text": "Décris cette image"},
-        {"type": "image_url", "image_url": {"url": "https://..."}}  # ⚠️ Ignoré
+        {"type": "text", "text": "Describe this image"},
+        {"type": "image_url", "image_url": {"url": "https://..."}}  # ⚠️ Ignored
     ])
 ]
 # Warning: Image content detected but NOT SUPPORTED by Claude Code SDK
 ```
 
-**Pourquoi ?** Le SDK Claude Code ne gère pas les messages multimodaux via le CLI.
+**Why?** The Claude Code SDK does not handle multimodal messages via the CLI.
 
-**Solution** : Pour les tâches vision, utilisez `ChatAnthropic` avec l'API de production qui supporte vision nativement.
-
----
-
-### 🔄 Support Async
-
-**Support Complet** ✅ : L'adaptateur supporte maintenant complètement les opérations asynchrones grâce à un fix d'isolation anyio.
-
-**✅ Opérations Sync (100%)**
-- `model.invoke()` - Support complet
-- `model.stream()` - Support complet
-- `model.batch()` - Support complet
-- Chaînes avec exécution sync - Support complet
-
-**✅ Opérations Async (100%)**
-- `model.ainvoke()` - Support complet
-- `model.astream()` - Streaming complet avec isolation anyio
-- `chain.astream()` avec parsers - **Support complet** (fix anyio/asyncio via queue)
-- Cancellation de stream - Supporté via break ou cancel()
-
-**Tests** : 16/16 tests fonctionnels passent (100%) ✅
-
-**Note technique** : Un problème `RuntimeError: cancel scope in different task` avec LangChain parsers a été résolu via un pattern de queue isolation. Détails : [`CLAUDE.md`](CLAUDE.md#critical-implementation-details)
+**Solution**: For vision tasks, use `ChatAnthropic` with the production API which natively supports vision.
 
 ---
 
-### 🔧 System Prompt - Conflit de Sources
+### 🔄 Async Support
 
-**Limitation** : Si vous spécifiez un `system_prompt` dans le constructor ET un `SystemMessage` dans les messages, il y a précédence.
+**Full Support** ✅: The adapter now fully supports asynchronous operations thanks to an anyio isolation fix.
 
-**Comportement** :
-- `SystemMessage` dans les messages **prend précédence**
-- Constructor `system_prompt` est **ignoré**
-- Un **warning est émis** si les deux sont présents
+**✅ Sync Operations (100%)**
+- `model.invoke()` - Full support
+- `model.stream()` - Full support
+- `model.batch()` - Full support
+- Chains with sync execution - Full support
 
-**Pourquoi ?** Pour éviter d'avoir deux system prompts contradictoires et assurer un comportement prévisible.
+**✅ Async Operations (100%)**
+- `model.ainvoke()` - Full support
+- `model.astream()` - Full streaming with anyio isolation
+- `chain.astream()` with parsers - **Full support** (anyio/asyncio fix via queue)
+- Stream cancellation - Supported via break or cancel()
+
+**Tests**: 16/16 functional tests passing (100%) ✅
+
+**Technical note**: A `RuntimeError: cancel scope in different task` issue with LangChain parsers was resolved via a queue isolation pattern. Details: [`CLAUDE.md`](CLAUDE.md#critical-implementation-details)
 
 ---
 
-### ⚡ Autres Limitations
+### 🔧 System Prompt - Source Conflict
+
+**Limitation**: If you specify a `system_prompt` in the constructor AND a `SystemMessage` in the messages, there is precedence.
+
+**Behavior**:
+- `SystemMessage` in messages **takes precedence**
+- Constructor `system_prompt` is **ignored**
+- A **warning is emitted** if both are present
+
+**Why?** To avoid having two contradictory system prompts and ensure predictable behavior.
+
+---
+
+### ⚡ Other Limitations
 
 | Limitation | Impact | Solution |
 |------------|--------|----------|
-| **Tool calls** | Pas de support natif | Peut être simulé via prompting explicite |
-| **Latence** | +10-30% vs API directe | Trade-off acceptable pour prototypage |
-| **CLI Required** | Nécessite `npm install -g @anthropic-ai/claude-code` | Installation une fois |
-| **Quotas** | Limités par votre abonnement Claude Code | Passer à API production si dépassé |
+| **Tool calls** | No native support | Can be simulated via explicit prompting |
+| **Latency** | +10-30% vs direct API | Acceptable trade-off for prototyping |
+| **CLI Required** | Requires `npm install -g @anthropic-ai/claude-code` | One-time installation |
+| **Quotas** | Limited by your Claude Code subscription | Switch to production API if exceeded |
 
 ---
 
-### 📊 Neutralité Comportementale
+### 📊 Behavioral Neutrality
 
-**Score global** : ~95%
+**Overall Score**: ~95%
 
-L'adaptateur maintient une **haute neutralité comportementale** avec l'API de production :
-- ✅ Messages et formats : 100% compatible
-- ✅ Streaming et async : 100% compatible
-- ⚠️ Paramètres sampling : Non supporté (temperature, max_tokens)
-- ⚠️ Vision : Non supporté
-- ✅ Comportement core : Identique à ChatAnthropic
+The adapter maintains **high behavioral neutrality** with the production API:
+- ✅ Messages and formats: 100% compatible
+- ✅ Streaming and async: 100% compatible
+- ⚠️ Sampling parameters: Not supported (temperature, max_tokens)
+- ⚠️ Vision: Not supported
+- ✅ Core behavior: Identical to ChatAnthropic
 
-**Validation** : 3 agents spécialisés ont analysé l'implémentation. Rapport complet : [`docs/VALIDATION_REPORT_2025-09-30.md`](docs/VALIDATION_REPORT_2025-09-30.md)
+**Validation**: 3 specialized agents analyzed the implementation. Full report: [`docs/VALIDATION_REPORT_2025-09-30.md`](docs/VALIDATION_REPORT_2025-09-30.md)
 
 ---
 
-### 💡 Recommandations
+### 💡 Recommendations
 
-**Pour le Prototypage** (cet adaptateur) :
-- ✅ Notebooks Jupyter
-- ✅ Scripts CLI de test
-- ✅ Chaînes LangChain basiques et complexes
-- ✅ Agents simples
-- ✅ Expérimentation rapide
+**For Prototyping** (this adapter):
+- ✅ Jupyter notebooks
+- ✅ CLI test scripts
+- ✅ Basic and complex LangChain chains
+- ✅ Simple agents
+- ✅ Rapid experimentation
 
-**Pour la Production** (ChatAnthropic) :
-- ✅ Applications nécessitant temperature control
-- ✅ Tâches vision/multimodal
-- ✅ Déploiements à grande échelle
-- ✅ Contrôle précis de la génération
-- ✅ Tool calls natifs
+**For Production** (ChatAnthropic):
+- ✅ Applications requiring temperature control
+- ✅ Vision/multimodal tasks
+- ✅ Large-scale deployments
+- ✅ Precise generation control
+- ✅ Native tool calls
 
-**Migration** : Changer une ligne de code suffit (voir section Migration Path ci-dessus).
+**Migration**: Changing one line of code is sufficient (see Migration Path section above).
 
-## 🤝 Contribution
+## 🤝 Contributing
 
-Les contributions sont bienvenues ! N'hésitez pas à :
-- Ajouter des fonctionnalités
-- Améliorer la documentation
-- Rapporter des bugs
-- Proposer des optimisations
+Contributions are welcome! Feel free to:
+- Add features
+- Improve documentation
+- Report bugs
+- Propose optimizations
 
-## 📄 Licence
+## 📄 License
 
 MIT
 
-## 🙏 Remerciements
+## 🙏 Acknowledgments
 
-- Anthropic pour Claude et Claude Code
-- LangChain pour le framework
-- Stéphane Wootha Richard pour l'orchestration
+- Anthropic for Claude and Claude Code
+- LangChain for the framework
+- Stéphane Wootha Richard for orchestration
 
 ---
 
-**Note** : Cet adaptateur est parfait pour le prototypage et le développement. Pour la production à grande échelle, considérez l'API officielle Anthropic.
+**Note**: This adapter is perfect for prototyping and development. For large-scale production, consider the official Anthropic API.

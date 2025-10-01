@@ -1,3 +1,6 @@
 # __INDEX - scripts
 
-Directory currently empty - reserved for utility scripts (build, deployment, maintenance automation).
+## (Currently empty)
+Description: Directory reserved for automation scripts and utilities
+Created: 2025-09-30
+Modified: 2025-10-01

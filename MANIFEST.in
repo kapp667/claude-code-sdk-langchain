@@ -2,7 +2,6 @@
 include README.md
 include LICENSE
 include CHANGELOG.md
-include IMPORTANT_MODEL_NOTE.md
 
 # Include documentation directory
 recursive-include docs *.md
