@@ -52,13 +52,20 @@ class ClaudeCodeChatModel(BaseChatModel):
     Cela vous permet d'utiliser Claude dans LangChain SANS frais API supplémentaires,
     en utilisant votre abonnement Claude Code existant (20$/mois).
 
+    Limitations:
+        - temperature: Accepted for API compatibility but NOT supported by Claude Code CLI
+        - max_tokens: Accepted for API compatibility but NOT supported by Claude Code CLI
+
+    For applications requiring temperature or token limit control, use ChatAnthropic
+    with an Anthropic API key instead.
+
     Example:
         .. code-block:: python
 
             model = ClaudeCodeChatModel(
-                model="claude-3-5-sonnet-20241022",
-                temperature=0.7,
-                max_tokens=1000
+                model="claude-sonnet-4-20250514",
+                temperature=0.7,  # WARNING: Not supported, will use default
+                max_tokens=1000   # WARNING: Not supported, will use default
             )
 
             # Utilisation simple
@@ -84,10 +91,10 @@ class ClaudeCodeChatModel(BaseChatModel):
     """Nom du modèle Claude à utiliser - NE PAS CHANGER (Sonnet 4 confirmé par l'utilisateur)"""
 
     temperature: Optional[float] = Field(default=0.7)
-    """Température pour la génération (0.0 à 1.0)"""
+    """Température pour la génération (0.0 à 1.0) - NOT SUPPORTED by Claude Code CLI"""
 
     max_tokens: Optional[int] = Field(default=2000)
-    """Nombre maximum de tokens à générer"""
+    """Nombre maximum de tokens à générer - NOT SUPPORTED by Claude Code CLI"""
 
     system_prompt: Optional[str] = Field(default=None)
     """Prompt système optionnel"""
@@ -116,31 +123,36 @@ class ClaudeCodeChatModel(BaseChatModel):
                 "npm install -g @anthropic-ai/claude-code"
             )
 
+        # Warning si temperature non-défaut spécifiée
+        if self.temperature is not None and self.temperature != 0.7:
+            logger.warning(
+                f"⚠️  Temperature {self.temperature} NOT SUPPORTED by Claude Code CLI. "
+                f"Model will use default temperature. "
+                f"For temperature control, use production API (ChatAnthropic). "
+                f"See: https://docs.anthropic.com/claude/reference/messages_post"
+            )
+
+        # Warning si max_tokens non-défaut spécifié
+        if self.max_tokens is not None and self.max_tokens != 2000:
+            logger.warning(
+                f"⚠️  max_tokens {self.max_tokens} NOT SUPPORTED by Claude Code CLI. "
+                f"Model will use default token limit. "
+                f"For token limit control, use production API (ChatAnthropic)."
+            )
+
     def _get_claude_options(self) -> ClaudeCodeOptions:
         """Construit les options pour Claude Code SDK"""
-        # Note: ClaudeCodeOptions ne supporte pas temperature et max_tokens
-        # Ces paramètres sont gérés au niveau du modèle Claude lui-même
-        # via extra_args si nécessaire
-        options_dict = {
-            "model": self.model_name,
-            "system_prompt": self.system_prompt,
-            "permission_mode": self.permission_mode,
-            "allowed_tools": self.allowed_tools,
-            "cwd": self.cwd,
-            "max_turns": 1,  # Pour comportement chat simple
-        }
-
-        # Ajouter temperature et max_tokens via extra_args si spécifiés
-        extra_args = {}
-        if self.temperature is not None:
-            extra_args["temperature"] = str(self.temperature)
-        if self.max_tokens is not None:
-            extra_args["max-tokens"] = str(self.max_tokens)
-
-        if extra_args:
-            options_dict["extra_args"] = extra_args
-
-        return ClaudeCodeOptions(**options_dict)
+        # Note: Temperature et max_tokens ne sont PAS supportés par le CLI Claude
+        # Ces paramètres sont acceptés pour compatibilité API mais n'ont aucun effet
+        # Warnings émis dans __init__ si valeurs non-défaut
+        return ClaudeCodeOptions(
+            model=self.model_name,
+            system_prompt=self.system_prompt,
+            permission_mode=self.permission_mode,
+            allowed_tools=self.allowed_tools,
+            cwd=self.cwd,
+            max_turns=1,  # Pour comportement chat simple
+        )
 
     def _generate(
         self,

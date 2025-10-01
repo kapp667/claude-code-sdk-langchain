@@ -107,11 +107,10 @@ Le reste de votre code reste identique !
 ```python
 model = ClaudeCodeChatModel(
     model="claude-sonnet-4-20250514",     # Modèle Claude Sonnet 4
-    temperature=0.7,                      # Créativité (0-1)
-    max_tokens=2000,                      # Tokens max
+    temperature=0.7,                      # ⚠️ NON SUPPORTÉ (valeur ignorée)
+    max_tokens=2000,                      # ⚠️ NON SUPPORTÉ (valeur ignorée)
     system_prompt="Tu es un expert...",  # Prompt système
     permission_mode="default",            # Mode permissions Claude Code
-    use_continuous_session=False         # Session avec mémoire
 )
 ```
 
@@ -130,6 +129,29 @@ Claude (via votre abonnement)
 ```
 
 ## ⚠️ Limitations
+
+### Temperature et Max_Tokens
+
+Le Claude Code CLI ne supporte pas les paramètres `temperature` et `max_tokens`. Ces paramètres sont acceptés pour compatibilité API mais **n'ont aucun effet**.
+
+**Pour le Développement (Claude Code):**
+```python
+model = ClaudeCodeChatModel()  # Utilise les valeurs par défaut du modèle
+# temperature=0.7 et max_tokens=2000 n'auront aucun effet
+```
+
+**Pour la Production (avec contrôle des paramètres):**
+```python
+model = ChatAnthropic(
+    temperature=0.7,
+    max_tokens=1000,
+    api_key=os.getenv("ANTHROPIC_API_KEY")
+)
+```
+
+Si vous avez besoin du contrôle de température ou de limite de tokens pendant le développement, utilisez l'API de production directement avec votre clé API Anthropic.
+
+### Autres Limitations
 
 - Pas de support natif des tool calls (peut être ajouté via prompting)
 - Latence potentiellement plus élevée que l'API directe
