@@ -239,10 +239,10 @@ def create_git_tag():
 
 def main():
     """Main deployment pipeline - GitHub focused"""
-    parser = argparse.ArgumentParser(description="Build and prepare claude-code-langchain for GitHub distribution")
-    parser.add_argument(
-        "--tag", action="store_true", help="Create and push git tag"
+    parser = argparse.ArgumentParser(
+        description="Build and prepare claude-code-langchain for GitHub distribution"
     )
+    parser.add_argument("--tag", action="store_true", help="Create and push git tag")
     parser.add_argument(
         "--skip-tests", action="store_true", help="Skip test execution (not recommended)"
     )
@@ -290,7 +290,9 @@ def main():
     print(f"     https://github.com/kapp667/claude-code-sdk-langchain/releases/new")
     print("  2. Attach wheel and tarball from dist/")
     print("  3. Users can install via:")
-    print(f"     pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git@v{version}")
+    print(
+        f"     pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git@v{version}"
+    )
 
 
 if __name__ == "__main__":
