@@ -1,24 +1,24 @@
-# Flux : Intégration avec chaînes LangChain
+# Flow: Integration with LangChain Chains
 
 ## Description
-Test de l'utilisation de ClaudeCodeChatModel dans des chaînes LangChain complexes.
+Test of ClaudeCodeChatModel usage in complex LangChain chains.
 
-## Flux
-1. Créer un ClaudeCodeChatModel
-2. Créer un ChatPromptTemplate avec système et humain
-3. Construire une chaîne avec l'opérateur pipe (|)
-4. Invoquer la chaîne avec des variables
-5. Vérifier que la chaîne fonctionne correctement
-6. Tester avec un OutputParser
+## Flow
+1. Create a ClaudeCodeChatModel
+2. Create a ChatPromptTemplate with system and human messages
+3. Build a chain with the pipe operator (|)
+4. Invoke the chain with variables
+5. Verify that the chain works correctly
+6. Test with an OutputParser
 
-## Cas d'usage testés
-- Chaîne simple prompt | model
-- Chaîne avec parser prompt | model | parser
-- Chaîne avec mémoire (ConversationBufferMemory)
-- Utilisation dans un agent ReAct
+## Test Cases
+- Simple chain: prompt | model
+- Chain with parser: prompt | model | parser
+- Chain with memory (ConversationBufferMemory)
+- Usage in a ReAct agent
 
 ## Validation
-- Les chaînes s'exécutent sans erreur
-- Les variables sont correctement substituées
-- Les parsers fonctionnent
-- L'intégration LCEL est complète
+- Chains execute without errors
+- Variables are correctly substituted
+- Parsers work as expected
+- LCEL integration is complete

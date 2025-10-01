@@ -38,7 +38,7 @@ lint = "ruff check src/ specs/"
 format = "black src/ specs/ scripts/"
 format-check = "black --check src/ specs/ scripts/"
 typecheck = "mypy src/"
-check = { depends_on = ["format-check", "lint", "typecheck"] }
+check = { depends-on = ["format-check", "lint", "typecheck"] }
 
 # Documentation tasks
 docs-serve = "mkdocs serve"
@@ -46,11 +46,24 @@ docs-build = "mkdocs build"
 
 # Utility tasks
 clean = "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && find . -name '*.pyc' -delete 2>/dev/null || true"
+clean-build = "rm -rf dist/ build/ *.egg-info"
 install-dev = "pip install -e ."
 
 # Demo and examples
 demo = "python scripts/demo.py"
 examples = "python scripts/run_examples.py"
+
+# Publishing and deployment tasks
+build-package = { cmd = "python -m build", depends-on = ["clean-build"] }
+validate-package = { cmd = "twine check dist/*", depends-on = ["build-package"] }
+publish-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = ["validate-package"] }
+publish-pypi = { cmd = "twine upload dist/*", depends-on = ["validate-package"] }
+publish = { depends-on = ["check", "test", "publish-pypi"] }
+
+# Interactive deployment (full pipeline with prompts)
+deploy = "python scripts/deploy.py"
+deploy-test = "python scripts/deploy.py --target testpypi"
+deploy-dry-run = "python scripts/deploy.py --dry-run"
 
 [activation]
 scripts = [

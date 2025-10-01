@@ -1,17 +1,17 @@
-# Flux : Chat Basique avec ClaudeCodeChatModel
+# Flow: Basic Chat with ClaudeCodeChatModel
 
 ## Description
-Test de l'intégration basique du modèle Claude Code dans LangChain.
+Test of basic Claude Code model integration in LangChain.
 
-## Flux
-1. Créer une instance de ClaudeCodeChatModel
-2. Envoyer un message simple "Bonjour, qui es-tu?"
-3. Recevoir et valider la réponse
-4. Vérifier que le message de réponse est de type AIMessage
-5. Confirmer que le contenu n'est pas vide
+## Flow
+1. Create a ClaudeCodeChatModel instance
+2. Send a simple message "Hello, who are you?"
+3. Receive and validate the response
+4. Verify that the response message is of type AIMessage
+5. Confirm that the content is not empty
 
 ## Validation
-- Le modèle répond correctement
-- La réponse est un AIMessage valide
-- Le contenu contient du texte
-- Pas d'erreurs durant l'exécution
+- The model responds correctly
+- The response is a valid AIMessage
+- The content contains text
+- No errors during execution

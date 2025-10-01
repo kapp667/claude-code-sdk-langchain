@@ -1,121 +1,121 @@
-# Investigation Temperature/Max_Tokens Support
+# Investigation: Temperature/Max_Tokens Support
 
-## Date : 2025-09-30
+## Date: 2025-09-30
 
 ## Question
 
-Le Claude Code SDK Python permet-il de contrôler les paramètres `temperature` et `max_tokens` ?
+Does the Claude Code Python SDK support controlling `temperature` and `max_tokens` parameters?
 
 ---
 
-## Résultats de l'Investigation
+## Investigation Results
 
-### 1. Documentation SDK Python (`python-SDK-reference.md`)
+### 1. Python SDK Documentation (`python-SDK-reference.md`)
 
-**ClaudeCodeOptions supporte** :
-- ✅ `max_thinking_tokens: int = 8000` - Maximum tokens pour le processus de thinking
-- ✅ `extra_args: dict[str, str | None] = {}` - Arguments CLI additionnels
+**ClaudeCodeOptions supports**:
+- ✅ `max_thinking_tokens: int = 8000` - Maximum tokens for thinking process
+- ✅ `extra_args: dict[str, str | None] = {}` - Additional CLI arguments
 
-**Citation ligne 485** :
-> `extra_args` : Additional CLI arguments to pass directly to the CLI
+**Quote from line 485**:
+> `extra_args`: Additional CLI arguments to pass directly to the CLI
 
-### 2. CLI Claude (`claude --help`)
+### 2. Claude CLI (`claude --help`)
 
-**Flags disponibles** :
+**Available flags**:
 - ✅ `--model <model>` - Model for the current session
 - ✅ `--append-system-prompt <prompt>` - Append to system prompt
 - ✅ `--permission-mode <mode>` - Permission mode
 - ✅ `--allowed-tools <tools...>` - Tool whitelist
-- ❌ **AUCUN FLAG `--temperature`**
-- ❌ **AUCUN FLAG `--max-tokens`**
+- ❌ **NO `--temperature` FLAG**
+- ❌ **NO `--max-tokens` FLAG**
 
-**Commande testée** :
+**Command tested**:
 ```bash
 claude --help 2>&1 | grep -i "temperature\|max.*token\|sampling"
-# Résultat : Aucune correspondance
+# Result: No matches
 ```
 
 ---
 
 ## Conclusions
 
-### ❌ Temperature : NON SUPPORTÉ
+### ❌ Temperature: NOT SUPPORTED
 
-**Evidence** :
-1. Pas de flag `--temperature` dans `claude --help`
-2. Pas de propriété `temperature` dans `ClaudeCodeOptions`
-3. `max_thinking_tokens` existe mais c'est différent (contrôle le thinking, pas la génération)
+**Evidence**:
+1. No `--temperature` flag in `claude --help`
+2. No `temperature` property in `ClaudeCodeOptions`
+3. `max_thinking_tokens` exists but is different (controls thinking, not generation)
 
-**Comportement actuel de l'adaptateur** :
+**Current adapter behavior**:
 ```python
 # chat_model.py:136
 extra_args["temperature"] = str(self.temperature)
 ```
 
-**Problème** : Ce flag est passé au CLI mais **ignoré silencieusement** car le CLI ne le reconnaît pas.
+**Problem**: This flag is passed to the CLI but **silently ignored** because the CLI doesn't recognize it.
 
-### ❌ Max_Tokens : NON SUPPORTÉ
+### ❌ Max_Tokens: NOT SUPPORTED
 
-**Evidence** :
-1. Pas de flag `--max-tokens` dans `claude --help`
-2. Pas de propriété `max_tokens` dans `ClaudeCodeOptions`
-3. Le CLI ne documente aucun contrôle de longueur de réponse
+**Evidence**:
+1. No `--max-tokens` flag in `claude --help`
+2. No `max_tokens` property in `ClaudeCodeOptions`
+3. The CLI doesn't document any response length control
 
-**Comportement actuel de l'adaptateur** :
+**Current adapter behavior**:
 ```python
 # chat_model.py:138
 extra_args["max-tokens"] = str(self.max_tokens)
 ```
 
-**Problème** : Ce flag est passé au CLI mais **ignoré silencieusement**.
+**Problem**: This flag is passed to the CLI but **silently ignored**.
 
 ---
 
-## Impact sur la Neutralité Comportementale
+## Impact on Behavioral Neutrality
 
-### Scénarios Problématiques
+### Problematic Scenarios
 
-#### Scénario 1 : Tests Déterministes
+#### Scenario 1: Deterministic Tests
 ```python
-# Développement avec adaptateur
-model = ClaudeCodeChatModel(temperature=0.0)  # Utilisateur veut réponses déterministes
+# Development with adapter
+model = ClaudeCodeChatModel(temperature=0.0)  # User wants deterministic responses
 response = model.invoke(messages)
-# MAIS : Claude utilise température par défaut (~0.7) → résultats variables
+# BUT: Claude uses default temperature (~0.7) → variable results
 
-# Production avec ChatAnthropic
+# Production with ChatAnthropic
 model = ChatAnthropic(temperature=0.0, api_key="...")
 response = model.invoke(messages)
-# Résultats déterministes comme attendu
+# Deterministic results as expected
 ```
 
-**Impact** : Tests passent en production, échouent en développement (ou vice-versa).
+**Impact**: Tests pass in production, fail in development (or vice-versa).
 
-#### Scénario 2 : Contrôle de Longueur
+#### Scenario 2: Length Control
 ```python
-# Développement
-model = ClaudeCodeChatModel(max_tokens=100)  # Limite à 100 tokens
+# Development
+model = ClaudeCodeChatModel(max_tokens=100)  # Limit to 100 tokens
 response = model.invoke(messages)
-# MAIS : Claude génère réponses complètes (potentiellement 1000+ tokens)
+# BUT: Claude generates complete responses (potentially 1000+ tokens)
 
 # Production
 model = ChatAnthropic(max_tokens=100, api_key="...")
 response = model.invoke(messages)
-# Respecte la limite de 100 tokens
+# Respects 100 token limit
 ```
 
-**Impact** : Applications qui comptent sur des réponses courtes cassent.
+**Impact**: Applications relying on short responses break.
 
 ---
 
-## Options de Résolution
+## Resolution Options
 
-### Option 1 : Warning Explicite (RECOMMANDÉ)
+### Option 1: Explicit Warning (RECOMMENDED)
 
-**Approche** : Avertir l'utilisateur que ces paramètres ne sont pas supportés.
+**Approach**: Warn user that these parameters are not supported.
 
 ```python
 def _get_claude_options(self) -> ClaudeCodeOptions:
-    # Avertissement si paramètres non-défaut
+    # Warning if non-default parameters
     if self.temperature is not None and self.temperature != 0.7:
         logger.warning(
             f"Temperature {self.temperature} specified but NOT SUPPORTED by Claude Code CLI. "
@@ -131,7 +131,7 @@ def _get_claude_options(self) -> ClaudeCodeOptions:
             f"This will cause different behavior when migrating to production APIs."
         )
 
-    # Ne pas passer via extra_args (inutile)
+    # Don't pass via extra_args (useless)
     return ClaudeCodeOptions(
         model=self.model_name,
         system_prompt=self.system_prompt,
@@ -142,50 +142,50 @@ def _get_claude_options(self) -> ClaudeCodeOptions:
     )
 ```
 
-**Avantages** :
-- ✅ Utilisateur est informé immédiatement
-- ✅ Message clair sur impact migration
-- ✅ Ne cache pas le problème
+**Advantages**:
+- ✅ User is informed immediately
+- ✅ Clear message about migration impact
+- ✅ Doesn't hide the problem
 
-**Inconvénients** :
-- ⚠️ Warning à chaque invocation si paramètres non-défaut
-- ⚠️ Peut être verbeux dans les logs
+**Disadvantages**:
+- ⚠️ Warning on every invocation if non-default parameters
+- ⚠️ Can be verbose in logs
 
-### Option 2 : Retirer les Paramètres
+### Option 2: Remove Parameters
 
-**Approche** : Supprimer `temperature` et `max_tokens` de `ClaudeCodeChatModel`.
+**Approach**: Remove `temperature` and `max_tokens` from `ClaudeCodeChatModel`.
 
 ```python
 class ClaudeCodeChatModel(BaseChatModel):
-    # Supprimer ces lignes :
+    # Remove these lines:
     # temperature: Optional[float] = Field(default=0.7)
     # max_tokens: Optional[int] = Field(default=2000)
 ```
 
-**Avantages** :
-- ✅ Impossible de spécifier des paramètres non supportés
-- ✅ API claire sur ce qui est supporté
+**Advantages**:
+- ✅ Impossible to specify unsupported parameters
+- ✅ Clear API about what's supported
 
-**Inconvénients** :
-- ❌ Casse compatibilité avec BaseChatModel
-- ❌ Utilisateurs doivent modifier code lors migration
-- ❌ Pas un "drop-in replacement"
+**Disadvantages**:
+- ❌ Breaks BaseChatModel compatibility
+- ❌ Users must modify code when migrating
+- ❌ Not a "drop-in replacement"
 
-### Option 3 : Documenter Uniquement
+### Option 3: Documentation Only
 
-**Approche** : Garder paramètres, documenter dans README/docstrings qu'ils ne fonctionnent pas.
+**Approach**: Keep parameters, document in README/docstrings that they don't work.
 
-**Avantages** :
-- ✅ Garde compatibilité interface
+**Advantages**:
+- ✅ Maintains interface compatibility
 
-**Inconvénients** :
-- ❌ Silencieux - utilisateur peut ne pas voir la documentation
-- ❌ Échec silencieux = mauvaise UX
-- ❌ Bugs difficiles à tracer
+**Disadvantages**:
+- ❌ Silent - user may not see documentation
+- ❌ Silent failure = bad UX
+- ❌ Bugs hard to trace
 
-### Option 4 : Raise Exception
+### Option 4: Raise Exception
 
-**Approche** : Lever une exception si paramètres non-défaut spécifiés.
+**Approach**: Raise exception if non-default parameters specified.
 
 ```python
 def __init__(self, **kwargs):
@@ -204,28 +204,28 @@ def __init__(self, **kwargs):
         )
 ```
 
-**Avantages** :
-- ✅ Impossible d'utiliser mauvais paramètres
-- ✅ Message d'erreur clair
+**Advantages**:
+- ✅ Impossible to use wrong parameters
+- ✅ Clear error message
 
-**Inconvénients** :
-- ❌ Casse le "drop-in replacement"
-- ❌ Utilisateurs doivent modifier beaucoup de code
+**Disadvantages**:
+- ❌ Breaks "drop-in replacement"
+- ❌ Users must modify a lot of code
 
 ---
 
-## Recommandation Finale
+## Final Recommendation
 
-### ✅ SOLUTION HYBRIDE (Option 1 + Documentation)
+### ✅ HYBRID SOLUTION (Option 1 + Documentation)
 
-**Implémentation** :
+**Implementation**:
 
-1. **Warning lors de l'initialisation** (une seule fois) :
+1. **Warning at initialization** (only once):
 ```python
 def __init__(self, **kwargs):
     super().__init__(**kwargs)
 
-    # Warning une seule fois à l'init
+    # Warning once at init
     if self.temperature is not None and self.temperature != 0.7:
         logger.warning(
             f"⚠️  Temperature {self.temperature} NOT SUPPORTED by Claude Code CLI. "
@@ -242,11 +242,11 @@ def __init__(self, **kwargs):
         )
 ```
 
-2. **Retirer extra_args inutiles** :
+2. **Remove useless extra_args**:
 ```python
 def _get_claude_options(self) -> ClaudeCodeOptions:
-    # Ne pas passer temperature/max_tokens via extra_args
-    # (ils sont ignorés de toute façon)
+    # Don't pass temperature/max_tokens via extra_args
+    # (they're ignored anyway)
     return ClaudeCodeOptions(
         model=self.model_name,
         system_prompt=self.system_prompt,
@@ -257,7 +257,7 @@ def _get_claude_options(self) -> ClaudeCodeOptions:
     )
 ```
 
-3. **Documentation claire** dans README.md :
+3. **Clear documentation** in README.md:
 ```markdown
 ## Known Limitations
 
@@ -284,7 +284,7 @@ If you need temperature or token limit control during development,
 use the production API directly with your Anthropic API key.
 ```
 
-4. **Docstring dans la classe** :
+4. **Docstring in class**:
 ```python
 class ClaudeCodeChatModel(BaseChatModel):
     """
@@ -305,52 +305,52 @@ class ClaudeCodeChatModel(BaseChatModel):
     """Max tokens (NOT SUPPORTED - kept for API compatibility only)"""
 ```
 
-### Avantages de Cette Solution
+### Advantages of This Solution
 
-- ✅ **Warning visible** : Utilisateur est prévenu immédiatement
-- ✅ **Une seule fois** : Warning au __init__, pas à chaque invoke()
-- ✅ **Code clean** : Retire extra_args inutiles
-- ✅ **Documentation** : README et docstrings clairs
-- ✅ **API compatibility** : Garde les paramètres pour "drop-in replacement"
-- ✅ **Fail-fast** : Utilisateur découvre la limitation tôt
-- ✅ **Migration guide** : Documentation montre comment basculer en production
+- ✅ **Visible warning**: User is notified immediately
+- ✅ **Only once**: Warning at __init__, not at each invoke()
+- ✅ **Clean code**: Removes useless extra_args
+- ✅ **Documentation**: Clear README and docstrings
+- ✅ **API compatibility**: Keeps parameters for "drop-in replacement"
+- ✅ **Fail-fast**: User discovers limitation early
+- ✅ **Migration guide**: Documentation shows how to switch to production
 
 ---
 
-## Tests de Validation
+## Validation Tests
 
 ```python
-# Test 1 : Warning température
+# Test 1: Temperature warning
 model = ClaudeCodeChatModel(temperature=0.0)
-# Devrait logger : "⚠️  Temperature 0.0 NOT SUPPORTED..."
+# Should log: "⚠️  Temperature 0.0 NOT SUPPORTED..."
 
-# Test 2 : Warning max_tokens
+# Test 2: max_tokens warning
 model = ClaudeCodeChatModel(max_tokens=100)
-# Devrait logger : "⚠️  max_tokens 100 NOT SUPPORTED..."
+# Should log: "⚠️  max_tokens 100 NOT SUPPORTED..."
 
-# Test 3 : Pas de warning si valeurs par défaut
+# Test 3: No warning if default values
 model = ClaudeCodeChatModel(temperature=0.7, max_tokens=2000)
-# Aucun warning
+# No warnings
 
-# Test 4 : Comportement identique
-# Les deux modèles devraient générer des réponses similaires
-# (car paramètres ignorés de toute façon)
+# Test 4: Identical behavior
+# Both models should generate similar responses
+# (since parameters are ignored anyway)
 ```
 
 ---
 
 ## Conclusion
 
-**Claude Code CLI ne supporte PAS `temperature` ni `max_tokens`.**
+**Claude Code CLI does NOT support `temperature` or `max_tokens`.**
 
-**Solution recommandée** :
-1. Warning clair à l'initialisation si paramètres non-défaut
-2. Retirer extra_args inutiles
-3. Documentation explicite des limitations
-4. Garder paramètres pour compatibilité API
+**Recommended solution**:
+1. Clear warning at initialization if non-default parameters
+2. Remove useless extra_args
+3. Explicit limitation documentation
+4. Keep parameters for API compatibility
 
-**Impact sur neutralité comportementale** :
-- Avec warnings : 85% (limitation claire, utilisateur informé)
-- Sans warnings : 60% (échec silencieux)
+**Impact on behavioral neutrality**:
+- With warnings: 85% (clear limitation, user informed)
+- Without warnings: 60% (silent failure)
 
-**Prochaine étape** : Implémenter la solution hybride recommandée.
+**Next step**: Implement recommended hybrid solution.
