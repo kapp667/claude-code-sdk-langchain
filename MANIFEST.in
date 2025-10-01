@@ -1,0 +1,26 @@
+# Include documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+include IMPORTANT_MODEL_NOTE.md
+
+# Include documentation directory
+recursive-include docs *.md
+
+# Exclude development and temporary files
+exclude .gitignore
+exclude .gitattributes
+recursive-exclude tmp *
+recursive-exclude .pixi *
+recursive-exclude __pycache__ *
+recursive-exclude *.pyc *
+recursive-exclude .pytest_cache *
+recursive-exclude .mypy_cache *
+recursive-exclude .ruff_cache *
+
+# Exclude test files from distribution
+recursive-exclude specs *
+recursive-exclude scripts *
+exclude test_simple.py
+exclude pixi.toml
+exclude pixi.lock

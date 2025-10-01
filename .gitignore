@@ -162,3 +162,6 @@ secrets.*
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Project-specific local documentation (not for GitHub)
+CLAUDE.md

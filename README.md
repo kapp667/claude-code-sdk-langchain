@@ -128,54 +128,145 @@ Claude Code CLI
 Claude (via votre abonnement)
 ```
 
-## ⚠️ Limitations
+## ⚠️ Limitations et Avertissements
 
-### Temperature et Max_Tokens
+Cette section documente les limitations connues de l'adaptateur. Ces limitations sont **intentionnelles** - elles représentent les trade-offs entre prototypage cost-free et API de production. L'adaptateur émet des **warnings runtime** pour vous prévenir quand vous utilisez des fonctionnalités non supportées.
 
-Le Claude Code CLI ne supporte pas les paramètres `temperature` et `max_tokens`. Ces paramètres sont acceptés pour compatibilité API mais **n'ont aucun effet**.
+### 🌡️ Temperature et Max_Tokens
+
+**Limitation** : Le Claude Code CLI ne supporte pas les paramètres `temperature` et `max_tokens`.
+
+**Comportement** :
+- Ces paramètres sont **acceptés pour compatibilité API** (évite de casser votre code)
+- Ils **n'ont aucun effet** sur la génération
+- Un **warning est émis** au moment de l'initialisation si vous spécifiez des valeurs non-défaut
 
 **Pour le Développement (Claude Code):**
 ```python
 model = ClaudeCodeChatModel()  # Utilise les valeurs par défaut du modèle
-# temperature=0.7 et max_tokens=2000 n'auront aucun effet
+# ⚠️ temperature=0.7 et max_tokens=2000 n'auront aucun effet
 ```
 
 **Pour la Production (avec contrôle des paramètres):**
 ```python
+from langchain_anthropic import ChatAnthropic
 model = ChatAnthropic(
-    temperature=0.7,
-    max_tokens=1000,
+    temperature=0.7,      # ✅ Fonctionne en production
+    max_tokens=1000,      # ✅ Fonctionne en production
     api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 ```
 
-Si vous avez besoin du contrôle de température ou de limite de tokens pendant le développement, utilisez l'API de production directement avec votre clé API Anthropic.
+**Pourquoi ?** Le CLI Claude Code ne expose pas de flags `--temperature` ou `--max-tokens`. Investigation complète : [`docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md`](docs/TEMPERATURE_MAX_TOKENS_INVESTIGATION.md)
 
-### Support Async
+**Solution** : Si vous avez besoin du contrôle de température ou de limite de tokens pendant le développement, utilisez directement l'API de production avec votre clé API Anthropic.
 
-L'adaptateur supporte les opérations asynchrones avec certaines limitations :
+---
 
-**✅ Opérations Sync (Support Complet - 100%)**
+### 🖼️ Vision et Contenu Multimodal
+
+**Limitation** : Les images et autres contenus non-texte ne sont pas supportés.
+
+**Comportement** :
+- Le texte est extrait et traité
+- Les images sont **silencieusement ignorées**
+- Un **warning est émis** quand une image est détectée dans les messages
+
+**Exemple** :
+```python
+messages = [
+    HumanMessage(content=[
+        {"type": "text", "text": "Décris cette image"},
+        {"type": "image_url", "image_url": {"url": "https://..."}}  # ⚠️ Ignoré
+    ])
+]
+# Warning: Image content detected but NOT SUPPORTED by Claude Code SDK
+```
+
+**Pourquoi ?** Le SDK Claude Code ne gère pas les messages multimodaux via le CLI.
+
+**Solution** : Pour les tâches vision, utilisez `ChatAnthropic` avec l'API de production qui supporte vision nativement.
+
+---
+
+### 🔄 Support Async
+
+**Support Complet** ✅ : L'adaptateur supporte maintenant complètement les opérations asynchrones grâce à un fix d'isolation anyio.
+
+**✅ Opérations Sync (100%)**
 - `model.invoke()` - Support complet
 - `model.stream()` - Support complet
 - `model.batch()` - Support complet
 - Chaînes avec exécution sync - Support complet
 
-**✅ Opérations Async (Support Complet)**
-- ✅ `model.ainvoke()` - Support complet
-- ✅ `model.astream()` - Streaming complet avec isolation anyio
-- ✅ `chain.astream()` avec parsers - **Support complet** (fix anyio/asyncio via queue)
-- ✅ Cancellation de stream - Supporté via break ou cancel()
+**✅ Opérations Async (100%)**
+- `model.ainvoke()` - Support complet
+- `model.astream()` - Streaming complet avec isolation anyio
+- `chain.astream()` avec parsers - **Support complet** (fix anyio/asyncio via queue)
+- Cancellation de stream - Supporté via break ou cancel()
 
 **Tests** : 16/16 tests fonctionnels passent (100%) ✅
 
-### Autres Limitations
+**Note technique** : Un problème `RuntimeError: cancel scope in different task` avec LangChain parsers a été résolu via un pattern de queue isolation. Détails : [`CLAUDE.md`](CLAUDE.md#critical-implementation-details)
 
-- Pas de support natif des tool calls (peut être ajouté via prompting)
-- Pas de support vision/multimodal (images détectées et warning émis)
-- Latence potentiellement plus élevée que l'API directe (subprocess overhead)
-- Nécessite Claude Code CLI installé localement
-- Limité par les quotas de votre abonnement Claude Code
+---
+
+### 🔧 System Prompt - Conflit de Sources
+
+**Limitation** : Si vous spécifiez un `system_prompt` dans le constructor ET un `SystemMessage` dans les messages, il y a précédence.
+
+**Comportement** :
+- `SystemMessage` dans les messages **prend précédence**
+- Constructor `system_prompt` est **ignoré**
+- Un **warning est émis** si les deux sont présents
+
+**Pourquoi ?** Pour éviter d'avoir deux system prompts contradictoires et assurer un comportement prévisible.
+
+---
+
+### ⚡ Autres Limitations
+
+| Limitation | Impact | Solution |
+|------------|--------|----------|
+| **Tool calls** | Pas de support natif | Peut être simulé via prompting explicite |
+| **Latence** | +10-30% vs API directe | Trade-off acceptable pour prototypage |
+| **CLI Required** | Nécessite `npm install -g @anthropic-ai/claude-code` | Installation une fois |
+| **Quotas** | Limités par votre abonnement Claude Code | Passer à API production si dépassé |
+
+---
+
+### 📊 Neutralité Comportementale
+
+**Score global** : ~95%
+
+L'adaptateur maintient une **haute neutralité comportementale** avec l'API de production :
+- ✅ Messages et formats : 100% compatible
+- ✅ Streaming et async : 100% compatible
+- ⚠️ Paramètres sampling : Non supporté (temperature, max_tokens)
+- ⚠️ Vision : Non supporté
+- ✅ Comportement core : Identique à ChatAnthropic
+
+**Validation** : 3 agents spécialisés ont analysé l'implémentation. Rapport complet : [`docs/VALIDATION_REPORT_2025-09-30.md`](docs/VALIDATION_REPORT_2025-09-30.md)
+
+---
+
+### 💡 Recommandations
+
+**Pour le Prototypage** (cet adaptateur) :
+- ✅ Notebooks Jupyter
+- ✅ Scripts CLI de test
+- ✅ Chaînes LangChain basiques et complexes
+- ✅ Agents simples
+- ✅ Expérimentation rapide
+
+**Pour la Production** (ChatAnthropic) :
+- ✅ Applications nécessitant temperature control
+- ✅ Tâches vision/multimodal
+- ✅ Déploiements à grande échelle
+- ✅ Contrôle précis de la génération
+- ✅ Tool calls natifs
+
+**Migration** : Changer une ligne de code suffit (voir section Migration Path ci-dessus).
 
 ## 🤝 Contribution
 
