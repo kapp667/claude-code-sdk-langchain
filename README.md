@@ -16,33 +16,31 @@ This adapter allows you to use your existing Claude Code subscription as a backe
 
 ## 📦 Installation
 
-### Via PyPI (Recommended)
+### Via GitHub (Recommended)
 
 ```bash
-# Full installation
-pip install claude-code-langchain
+# Latest version from main branch
+pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git
 
-# Or with development dependencies
-pip install claude-code-langchain[dev]
+# Specific version tag
+pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git@v0.1.0
 ```
 
 ### Via Pixi
 
 ```bash
-pixi add --pypi claude-code-langchain
+# In your pixi.toml
+[pypi-dependencies]
+claude-code-langchain = { git = "https://github.com/kapp667/claude-code-sdk-langchain.git" }
+
+# Or specific version
+claude-code-langchain = { git = "https://github.com/kapp667/claude-code-sdk-langchain.git", tag = "v0.1.0" }
 ```
 
-### Via Poetry
+### Via GitHub Release (Manual)
 
-```bash
-poetry add claude-code-langchain
-```
-
-### Via GitHub (Development Version)
-
-```bash
-pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git
-```
+1. Download wheel from [Releases](https://github.com/kapp667/claude-code-sdk-langchain/releases)
+2. Install: `pip install claude_code_langchain-0.1.0-py3-none-any.whl`
 
 ### Prerequisites
 

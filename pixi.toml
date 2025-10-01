@@ -53,18 +53,14 @@ install-dev = "pip install -e ."
 demo = "python scripts/demo.py"
 examples = "python scripts/run_examples.py"
 
-# Publishing and deployment tasks
+# Build and packaging tasks (GitHub distribution)
 build-package = { cmd = "python -m build", depends-on = ["clean-build"] }
 validate-package = { cmd = "twine check dist/*", depends-on = ["build-package"] }
-publish-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = ["validate-package"] }
-publish-pypi = { cmd = "twine upload dist/*", depends-on = ["validate-package"] }
-publish = { depends-on = ["check", "test", "publish-pypi"] }
 
-# Interactive deployment (full pipeline with prompts)
+# Simplified deployment workflow (GitHub focused)
 deploy = "python scripts/deploy.py --skip-tests"
 deploy-with-tests = "python scripts/deploy.py"
-deploy-test = "python scripts/deploy.py --target testpypi --skip-tests"
-deploy-dry-run = "python scripts/deploy.py --dry-run"
+deploy-tag = "python scripts/deploy.py --skip-tests --tag"
 
 [activation.env]
 PYTHONPATH = "$PWD/src"

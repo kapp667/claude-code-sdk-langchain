@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Interactive deployment script for claude-code-langchain
+Simplified deployment script for claude-code-langchain
 
-Automates the entire deployment pipeline with validation checks and
-interactive prompts for safe publishing to PyPI.
+Builds package and prepares GitHub release without PyPI complexity.
 
 Usage:
-    pixi run python scripts/deploy.py
+    pixi run deploy           # Build and prepare for GitHub release
+    pixi run deploy --tag     # Also create and push git tag
 
-    # Or direct:
-    python scripts/deploy.py --target pypi
-    python scripts/deploy.py --target testpypi
-    python scripts/deploy.py --dry-run
+    # Install from GitHub:
+    pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git
 """
 
 import argparse
@@ -199,47 +197,33 @@ def validate_package():
     print_success("Package validation passed")
 
 
-def publish_to_testpypi():
-    """Publish to TestPyPI"""
-    print_step(7, "Publishing to TestPyPI")
-
-    if not confirm("Upload to TestPyPI?", default=True):
-        print_warning("Skipping TestPyPI upload")
-        return
-
-    run_command("pixi run publish-test")
-    print_success("Published to TestPyPI")
+def show_github_instructions():
+    """Show instructions for creating GitHub release"""
+    print_step(7, "GitHub Release Instructions")
 
     version = get_version()
-    print(f"\n  Test installation:")
-    print(f"  pip install -i https://test.pypi.org/simple/ claude-code-langchain=={version}")
+    print(f"\n  Package version: {Colors.BOLD}{version}{Colors.END}")
+    print(f"\n  {Colors.BOLD}To create a GitHub release:{Colors.END}")
+    print(f"  1. Go to: https://github.com/kapp667/claude-code-sdk-langchain/releases/new")
+    print(f"  2. Tag version: v{version}")
+    print(f"  3. Release title: Release v{version}")
+    print(f"  4. Attach files from dist/ directory:")
 
+    dist_files = Path("dist").glob("*")
+    for dist_file in sorted(dist_files):
+        print(f"     - {dist_file.name}")
 
-def publish_to_pypi():
-    """Publish to PyPI"""
-    print_step(8, "Publishing to PyPI")
-
-    version = get_version()
-
-    print_warning(f"About to publish version {version} to PyPI")
-    print_warning("This action CANNOT be undone (versions are immutable)")
-
-    if not confirm("Proceed with PyPI upload?", default=False):
-        print_error("PyPI upload cancelled")
-        sys.exit(1)
-
-    run_command("pixi run publish-pypi")
-    print_success(f"Published version {version} to PyPI!")
-
-    print(f"\n  Installation:")
-    print(f"  pip install claude-code-langchain=={version}")
-    print(f"\n  PyPI page:")
-    print(f"  https://pypi.org/project/claude-code-langchain/{version}/")
+    print(f"\n  {Colors.BOLD}Users can install via:{Colors.END}")
+    print(f"  pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git")
+    print(f"  pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git@v{version}")
+    print(f"\n  {Colors.BOLD}Or download wheel from release:{Colors.END}")
+    print(f"  pip install claude_code_langchain-{version}-py3-none-any.whl")
+    print_success("Package ready for GitHub distribution")
 
 
 def create_git_tag():
     """Create and push git tag"""
-    print_step(9, "Creating Git tag")
+    print_step(8, "Creating Git tag")
 
     version = get_version()
     tag = f"v{version}"
@@ -254,16 +238,10 @@ def create_git_tag():
 
 
 def main():
-    """Main deployment pipeline"""
-    parser = argparse.ArgumentParser(description="Deploy claude-code-langchain package")
+    """Main deployment pipeline - GitHub focused"""
+    parser = argparse.ArgumentParser(description="Build and prepare claude-code-langchain for GitHub distribution")
     parser.add_argument(
-        "--target",
-        choices=["testpypi", "pypi", "both"],
-        default="both",
-        help="Deployment target (default: both)",
-    )
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Run checks and build without publishing"
+        "--tag", action="store_true", help="Create and push git tag"
     )
     parser.add_argument(
         "--skip-tests", action="store_true", help="Skip test execution (not recommended)"
@@ -276,7 +254,7 @@ def main():
 
     # Print header
     version = get_version()
-    print_header(f"Deploying claude-code-langchain v{version}")
+    print_header(f"Building claude-code-langchain v{version}")
 
     # Pre-deployment checks
     check_git_status()
@@ -296,29 +274,23 @@ def main():
     build_package()
     validate_package()
 
-    if args.dry_run:
-        print_header("Dry Run Complete")
-        print("Package is ready for deployment but not published")
-        print(f"To deploy: python scripts/deploy.py --target pypi")
-        sys.exit(0)
+    # Show GitHub instructions
+    show_github_instructions()
 
-    # Publish
-    if args.target in ["testpypi", "both"]:
-        publish_to_testpypi()
-
-    if args.target in ["pypi", "both"]:
-        publish_to_pypi()
+    # Optional: Create git tag
+    if args.tag:
         create_git_tag()
 
     # Success summary
-    print_header("Deployment Complete! 🎉")
-    print(f"Version {version} successfully deployed")
+    print_header("Build Complete! 🎉")
+    print(f"Version {version} built and ready")
+    print("\nDistribution files created in dist/")
     print("\nNext steps:")
-    print("  1. Create GitHub Release at:")
+    print("  1. Create GitHub Release:")
     print(f"     https://github.com/kapp667/claude-code-sdk-langchain/releases/new")
-    print("  2. Monitor PyPI stats:")
-    print(f"     https://pypistats.org/packages/claude-code-langchain")
-    print("  3. Update conda-forge feedstock (if applicable)")
+    print("  2. Attach wheel and tarball from dist/")
+    print("  3. Users can install via:")
+    print(f"     pip install git+https://github.com/kapp667/claude-code-sdk-langchain.git@v{version}")
 
 
 if __name__ == "__main__":
