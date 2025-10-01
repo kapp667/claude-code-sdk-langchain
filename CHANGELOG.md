@@ -1,5 +1,17 @@
 # CHANGELOG
 
+[2025-09-30 20:30] #fix Resolve 3 critical bugs blocking production
+→ commits: c4b0202..df71aac | tag: todo-20250930-2030
+→ modules: src/claude_code_langchain/*.py, README.md, docs/*.md
+→ keywords: temperature, max_tokens, multimodal, system-prompt, warnings, behavioral-neutrality
+• **CRITICAL**: Temperature/max_tokens warnings implemented (CLI not supported)
+• **CRITICAL**: Multimodal images detection + warning (vision not supported)
+• **CRITICAL**: System prompt conflict resolution (messages > constructor)
+• Documentation: README updated with limitations section
+• Documentation: Investigation reports added to docs/
+• Tests: All warnings validated with edge cases
+• Impact: 3 blocking bugs resolved, production-ready behavioral neutrality
+
 [2025-09-30 18:00] #fix Critical bug fixes for production neutrality
 → commits: TBD | tag: todo-20250930-1800
 → modules: src/claude_code_langchain/*.py, examples/basic_usage.py
