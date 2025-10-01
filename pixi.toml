@@ -61,8 +61,9 @@ publish-pypi = { cmd = "twine upload dist/*", depends-on = ["validate-package"] 
 publish = { depends-on = ["check", "test", "publish-pypi"] }
 
 # Interactive deployment (full pipeline with prompts)
-deploy = "python scripts/deploy.py"
-deploy-test = "python scripts/deploy.py --target testpypi"
+deploy = "python scripts/deploy.py --skip-tests"
+deploy-with-tests = "python scripts/deploy.py"
+deploy-test = "python scripts/deploy.py --target testpypi --skip-tests"
 deploy-dry-run = "python scripts/deploy.py --dry-run"
 
 [activation.env]
