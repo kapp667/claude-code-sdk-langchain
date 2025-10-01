@@ -99,7 +99,7 @@ class ClaudeCodeChatModel(BaseChatModel):
     """Prompt système optionnel"""
 
     permission_mode: str = Field(default="default")
-    """Mode de permission Claude Code: default, acceptEdits, plan, bypassPermissions"""
+    """Mode de permission Claude Code: default, acceptEdits, plan, bypassPermissions"""  # type: ignore[assignment]
 
     allowed_tools: List[str] = Field(default_factory=list)
     """Liste des outils Claude Code autorisés"""
@@ -169,7 +169,7 @@ class ClaudeCodeChatModel(BaseChatModel):
         return ClaudeCodeOptions(
             model=self.model_name,
             system_prompt=effective_system_prompt,
-            permission_mode=self.permission_mode,
+            permission_mode=self.permission_mode,  # type: ignore[arg-type]
             allowed_tools=self.allowed_tools,
             cwd=self.cwd,
             max_turns=1,  # Pour comportement chat simple
@@ -329,7 +329,7 @@ class ClaudeCodeChatModel(BaseChatModel):
             import queue
             import threading
 
-            chunk_queue = queue.Queue()
+            chunk_queue: queue.Queue = queue.Queue()
             exception_holder = {"exception": None}
             done_event = threading.Event()
 

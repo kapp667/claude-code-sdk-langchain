@@ -127,7 +127,7 @@ class MessageConverter:
                 result.append({"type": "text", "text": f"[System Instructions]\n{message.content}"})
 
             elif isinstance(message, HumanMessage):
-                result.append({"type": "text", "text": message.content})
+                result.append({"type": "text", "text": str(message.content)})
 
             elif isinstance(message, AIMessage):
                 # Pour maintenir le contexte de conversation
@@ -175,7 +175,7 @@ class MessageConverter:
         """
         from claude_code_sdk import ResultMessage
 
-        metadata = {}
+        metadata: Dict[str, Any] = {}
 
         try:
             if isinstance(claude_message, ResultMessage):
