@@ -1,5 +1,10 @@
 # Claude Code SDK - LangChain Adapter
 
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![LangChain](https://img.shields.io/badge/LangChain-compatible-green.svg)](https://github.com/langchain-ai/langchain)
+[![Status](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/kapp667/claude-code-sdk-langchain)
+
 Utilisez Claude via votre abonnement Claude Code (20$/mois) comme modèle LLM dans LangChain pour prototyper des applications agentiques **SANS frais API supplémentaires** !
 
 ## 🎯 Objectif
