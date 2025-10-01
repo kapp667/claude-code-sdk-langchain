@@ -46,7 +46,7 @@ docs-build = "mkdocs build"
 
 # Utility tasks
 clean = "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && find . -name '*.pyc' -delete 2>/dev/null || true"
-clean-build = "rm -rf dist/ build/ *.egg-info"
+clean-build = "rm -rf dist/ build/ src/*.egg-info 2>/dev/null || true"
 install-dev = "pip install -e ."
 
 # Demo and examples
@@ -65,21 +65,9 @@ deploy = "python scripts/deploy.py"
 deploy-test = "python scripts/deploy.py --target testpypi"
 deploy-dry-run = "python scripts/deploy.py --dry-run"
 
-[activation]
-scripts = [
-    "export PYTHONPATH=$PWD/src:${PYTHONPATH:-}",
-    "export CLAUDE_SDK_ENV=development"
-]
-
-[feature.dev.dependencies]
-# Additional dev-only dependencies can go here
-jupyterlab = "*"
-ipython = "*"
-
-[feature.docs.dependencies]
-# Documentation-specific dependencies
-mkdocs-jupyter = "*"
-pymdown-extensions = "*"
+[activation.env]
+PYTHONPATH = "$PWD/src"
+CLAUDE_SDK_ENV = "development"
 
 [pypi-dependencies]
 claude-code-sdk = ">=0.0.23, <0.0.24"
