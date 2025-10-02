@@ -1,5 +1,19 @@
 # CHANGELOG
 
+[2025-10-02 00:00] #docs Updated CLAUDE.md with complete project state
+→ commits: 8c3fe18 | tag: init-20251002-0000
+→ modules: CLAUDE.md, .gitignore
+→ keywords: documentation, project-state, onboarding, memory, claude-code-guidance
+• Complete rewrite of CLAUDE.md reflecting current project state
+• Added deployment strategy (GitHub-only distribution)
+• Added test configuration (CLAUDE_TEST_MODEL env var)
+• Added project structure overview
+• Added recent changes section (2025-10-01)
+• Documented all commands, architecture, testing philosophy
+• Cleaned .gitignore: removed duplicates and obsolete entries
+• CLAUDE.md remains local only (gitignored) for Claude Code guidance
+• Impact: Future Claude instances can be productive in <5 minutes
+
 [2025-10-01 17:30] #refactor Simplified deployment to GitHub-only distribution
 → commits: e642869..e211857 | tag: todo-20251001-1730
 → modules: scripts/deploy.py, pixi.toml, DEPLOYMENT.md, README.md
